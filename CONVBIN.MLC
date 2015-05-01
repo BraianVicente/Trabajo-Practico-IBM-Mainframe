@@ -5,29 +5,62 @@ CONVBIN   SUBENTRY BASES=(3)
           WAIT	ECB=WAITDEC
           WTOR  'INGRESE EXPONETE',EXPONETE,,WAITEXP
           WAIT	ECB=WAITEXP          
-		  BAL	14,CONVABIN
+		  LA	4,ENTERA
+		  LA	5,ENTPACK		  
+		  BAL	12,CONVABIN
 		  MVC	SALIDA,ENTERA
-		  BAL	14,IMPRIMIR
+		  BAL	12,IMPRIMIR
+		  
+		  LA	4,DECIMAL
+		  LA	5,DECPACK		  
+		  BAL	12,CONVABIN
 		  MVC	SALIDA,DECIMAL
-		  BAL 	14,IMPRIMIR
+		  BAL 	12,IMPRIMIR
+		  
+		  LA	4,EXPONETE
+		  LA	5,EXPPACK		  
+		  BAL	12,LOADBIN
+		  LA	4,EXPONETE+4
+		  BAL	12,LOADBIN
 		  MVC	SALIDA,EXPONETE
-		  BAL	14,IMPRIMIR
-		  B		EXIT
+		  BAL	12,IMPRIMIR
+ERROR	  B		EXIT
 *********************************************
 *			IMPRIMIR POR PATALLA			*
 *********************************************
 IMPRIMIR  WTO	MF=(E,SALIDA-4)
-          BR	14
+          BR	12
 *********************************************
 *			CONVERTIR A BINARIO				*
 *********************************************
-CONVABIN  PACK	ENTPACK,ENTERA
-		  L		6,ENTPACK
-		  L		7,ENTPACK+4
+* ENT		00004504
+* DEC		15940000
+* EXP		10011001
+CONVABIN  PACK	0(8,5),0(8,4)
+		  L		6,0(0,5)
+		  L		7,4(0,5)
 		  SRDL	6,4
-		  ST	6,ENTPACK
-		  ST	7,ENTPACK+4	
-		  BR	14
+		  ST	6,0(0,5)
+		  ST	7,4(0,5)	
+		  BR	12
+
+
+LOADBIN	  L		7,0(0,4)
+OTRO	  LA	6,0
+		  SLDL	6,8
+		  C		6,=F'0'
+		  BE	FINX
+		  C		6,=F'240'
+		  BL	ERROR
+		  C		6,=F'249'
+		  BH	ERROR
+		  S		6,=F'240'
+		  L		8,0(0,5)
+		  SLL	8,1
+		  AR	6,8
+		  ST	6,0(0,5)
+		  B		OTRO
+FINX	  BR	12
 *********************************************
 *			DEFINICION VARIABLES			*
 *********************************************		        
@@ -41,5 +74,7 @@ DECIMAL   DC  	CL8'00000000'
 WAITDEC	  DC 	F'0'
 EXPONETE  DC   	CL8'00000000'
 WAITEXP	  DC 	F'0'
-ENTPACK	  DC	X'0000000000000000'
+ENTPACK	  DC	D'0000000000000000'
+DECPACK	  DC	D'0000000000000000'
+EXPPACK	  DC	F'0'
           END
