@@ -1,0 +1,45 @@
+CONVBIN   SUBENTRY BASES=(3)
+          WTOR  'INGRESE PARTE ENTERA',ENTERA,,WAITENT
+          WAIT	ECB=WAITENT
+          WTOR  'INGRESE PARTE DECIMAL',DECIMAL,,WAITDEC
+          WAIT	ECB=WAITDEC
+          WTOR  'INGRESE EXPONETE',EXPONETE,,WAITEXP
+          WAIT	ECB=WAITEXP          
+		  BAL	14,CONVABIN
+		  MVC	SALIDA,ENTERA
+		  BAL	14,IMPRIMIR
+		  MVC	SALIDA,DECIMAL
+		  BAL 	14,IMPRIMIR
+		  MVC	SALIDA,EXPONETE
+		  BAL	14,IMPRIMIR
+		  B		EXIT
+*********************************************
+*			IMPRIMIR POR PATALLA			*
+*********************************************
+IMPRIMIR  WTO	MF=(E,SALIDA-4)
+          BR	14
+*********************************************
+*			CONVERTIR A BINARIO				*
+*********************************************
+CONVABIN  PACK	ENTPACK,ENTERA
+		  L		6,ENTPACK
+		  L		7,ENTPACK+4
+		  SRDL	6,4
+		  ST	6,ENTPACK
+		  ST	7,ENTPACK+4	
+		  BR	14
+*********************************************
+*			DEFINICION VARIABLES			*
+*********************************************		        
+EXIT      SUBEXIT
+		  DC	H'12'
+          DC	H'0'
+SALIDA	  DC	CL8'00000000'
+ENTERA    DC   	CL8'00000000'
+WAITENT	  DC 	F'0'
+DECIMAL   DC  	CL8'00000000'
+WAITDEC	  DC 	F'0'
+EXPONETE  DC   	CL8'00000000'
+WAITEXP	  DC 	F'0'
+ENTPACK	  DC	X'0000000000000000'
+          END
