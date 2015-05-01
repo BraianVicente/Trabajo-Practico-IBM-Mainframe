@@ -1,0 +1,51 @@
+CONVHEX   SUBENTRY BASES=(3)
+          WTOR  'INGRESE NUMERO EN FORMATO HEXA',HEXA,,WAITHEXA
+          WAIT	ECB=WAITHEXA
+		  L		7,HEXA
+		  BAL	12,XTOBIN
+		  L		7,HEXA+4
+		  BAL	12,XTOBIN
+		  MVC	SALIDA,HEXA
+		  BAL	12,IMPRIMIR
+*IEEE 754 C546D800
+ERROR	  B		EXIT
+*********************************************
+*			IMPRIMIR POR PATALLA			*
+*********************************************
+IMPRIMIR  WTO	MF=(E,SALIDA-4)
+          BR	12
+*********************************************
+*			CONVERTIR A BINARIO				*
+*********************************************
+XTOBIN    LA 	6,0
+		  SLDL	6,8
+		  C		6,=F'193'
+		  BL	FINX
+		  C		6,=F'199'
+		  BL	CONVCHAR
+		  C		6,=F'240'
+		  BL	ERROR
+		  C		6,=F'249'
+		  BH	ERROR
+CONVDEC	  S		6,=F'240'
+		  B		SAVERES
+CONVCHAR  S		6,=F'193'
+		  A		6,=F'10'
+SAVERES   L		4,CONHEXA
+		  SLL	4,4
+		  AR	6,4
+		  ST	6,CONHEXA
+		  B		XTOBIN
+FINX	  BR	12
+*********************************************
+*			DEFINICION VARIABLES			*
+*********************************************		        
+EXIT      SUBEXIT
+		  DC	H'12'
+          DC	H'0'
+SALIDA	  DC	CL8'00000000'
+HEXA	  DC   	CL8'00000000'
+WAITHEXA  DC 	F'0'
+CONHEXA	  DC	F'0'
+SUBHEXA	  DC	F'10'
+          END
