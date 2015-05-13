@@ -5,43 +5,74 @@ CONVBIN   SUBENTRY BASES=(3)
           WAIT	ECB=WAITDEC
           WTOR  'INGRESE EXPONETE',EXPONETE,,WAITEXP
           WAIT	ECB=WAITEXP          
-		  LA	4,ENTERA
-		  LA	5,ENTPACK		  
-		  BAL	12,CONVABIN
-		  MVC	SALIDA,ENTERA
-		  BAL	12,IMPRIMIR
-		  
+
 		  LA	4,DECIMAL
 		  LA	5,DECPACK		  
-		  BAL	12,CONVABIN
+		  BAL	12,LOADBIN
+		  LA	4,DECIMAL+4
+		  BAL	12,LOADBIN
 		  MVC	SALIDA,DECIMAL
+		  MVC	LONGSAL,=H'20'
 		  BAL 	12,IMPRIMIR
-		  
+
+		  LA	4,ENTERA
+		  LA	5,ENTPACK		  
+		  BAL	12,LOADBIN
+		  LA	4,ENTERA+4
+		  BAL	12,LOADBIN		  
+		  MVC	LONGSAL,=H'12'
+		  MVC	SALIDA,ENTERA
+		  BAL	12,IMPRIMIR
+
 		  LA	4,EXPONETE
 		  LA	5,EXPPACK		  
 		  BAL	12,LOADBIN
 		  LA	4,EXPONETE+4
 		  BAL	12,LOADBIN
+		  MVC	LONGSAL,=H'12'
 		  MVC	SALIDA,EXPONETE
 		  BAL	12,IMPRIMIR
-ERROR	  B		EXIT
+
+	        
+EXIT      SUBEXIT
+*********************************************
+*			DEFINICION VARIABLES			*
+*********************************************	
+LONGSAL	  DC	H'20'
+          DC	H'0'
+SALIDA	  DC	CL16'00000000000000000000'
+
+ENTERA    DC   	CL8'00000000'
+WAITENT	  DC 	F'0'
+
+DECIMAL   DC  	CL16'0000000000000000'
+WAITDEC	  DC 	F'0'
+
+EXPONETE  DC   	CL8'00000000'
+WAITEXP	  DC 	F'0'
+
+DECPACK	  DC	D'0'
+ENTPACK	  DC	F'0'
+EXPPACK	  DC	F'0'
+
 *********************************************
 *			IMPRIMIR POR PATALLA			*
 *********************************************
 IMPRIMIR  WTO	MF=(E,SALIDA-4)
           BR	12
 *********************************************
-*			CONVERTIR A BINARIO				*
+*	   CONVERTIR CIENTIFICO A BINARIO		*
 *********************************************
-* ENT		00004504
-* DEC		15940000
-* EXP		10011001
+
+* PARTE ENTERA DESIGNA EL SIGNO.
+* ENT		00000111
+* DEC		1010000000000000
+* EXP		00011001
 CONVABIN  PACK	0(8,5),0(8,4)
-		  L		6,0(0,5)
-		  L		7,4(0,5)
-		  SRDL	6,4
+		  CVB	4,0(0,5)
+		  LA	6,0
 		  ST	6,0(0,5)
-		  ST	7,4(0,5)	
+		  ST	4,4(0,5)
 		  BR	12
 
 
@@ -61,20 +92,6 @@ OTRO	  LA	6,0
 		  ST	6,0(0,5)
 		  B		OTRO
 FINX	  BR	12
-*********************************************
-*			DEFINICION VARIABLES			*
-*********************************************		        
-EXIT      SUBEXIT
-		  DC	H'12'
-          DC	H'0'
-SALIDA	  DC	CL8'00000000'
-ENTERA    DC   	CL8'00000000'
-WAITENT	  DC 	F'0'
-DECIMAL   DC  	CL8'00000000'
-WAITDEC	  DC 	F'0'
-EXPONETE  DC   	CL8'00000000'
-WAITEXP	  DC 	F'0'
-ENTPACK	  DC	D'0000000000000000'
-DECPACK	  DC	D'0000000000000000'
-EXPPACK	  DC	F'0'
+
+
           END
