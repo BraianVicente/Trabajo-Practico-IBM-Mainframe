@@ -5,10 +5,23 @@ CONVHEX   SUBENTRY BASES=(3)
 		  BAL	12,XTOBIN
 		  L		7,HEXA+4
 		  BAL	12,XTOBIN
+		  L		4,CONHEXA
 		  MVC	SALIDA,HEXA
 		  BAL	12,IMPRIMIR
 *IEEE 754 C546D800
-ERROR	  B		EXIT
+
+EXIT      SUBEXIT
+*********************************************
+*			DEFINICION VARIABLES			*
+*********************************************		        
+		  DC	H'12'
+          DC	H'0'
+SALIDA	  DC	CL8'00000000'
+HEXA	  DC   	CL8'00000000'
+WAITHEXA  DC 	F'0'
+CONHEXA	  DC	F'0'
+SUBHEXA	  DC	F'10'
+
 *********************************************
 *			IMPRIMIR POR PATALLA			*
 *********************************************
@@ -37,15 +50,5 @@ SAVERES   L		4,CONHEXA
 		  ST	6,CONHEXA
 		  B		XTOBIN
 FINX	  BR	12
-*********************************************
-*			DEFINICION VARIABLES			*
-*********************************************		        
-EXIT      SUBEXIT
-		  DC	H'12'
-          DC	H'0'
-SALIDA	  DC	CL8'00000000'
-HEXA	  DC   	CL8'00000000'
-WAITHEXA  DC 	F'0'
-CONHEXA	  DC	F'0'
-SUBHEXA	  DC	F'10'
+
           END
