@@ -1,0 +1,214 @@
+OPERAC	  SUBENTRY BASES=(3)
+		  L		7,BINA_0
+		  BAL	12,XTOBIN
+		  L		7,BINA_0+4
+		  BAL	12,XTOBIN
+          MVC	NUM_0,FULLAUX
+          
+		  L		7,BINA_1
+		  BAL	12,XTOBIN
+		  L		7,BINA_1+4
+		  BAL	12,XTOBIN
+		  MVC	NUM_1,FULLAUX
+OPERAR    SUBEXIT
+		  
+*********************************************
+*					SUMA					*
+*********************************************
+SUMRES	  LA	4,0
+          L		5,NUM_0
+          LA	6,0
+          L		7,NUM_1
+
+          SLDL	4,1
+          ST	4,SIG_0
+          CL	4,=F'1'
+		  LA	4,0
+		  BNE	POS_0
+		  SLDL	4,8
+		  ST	4,EXP_0
+		  SRL	5,9
+		  LR	8,5
+		  LA	5,0
+		  SR	5,8
+
+POS_0	  SLDL	6,1
+		  ST	6,SIG_1
+		  CL	6,=F'1'
+		  LA	6,0
+		  BNE	VER_ABS
+		  SLDL	6,8
+		  ST	6,EXP_1
+		  SRL	7,9
+		  LR	8,7
+		  LA	7,0
+		  SR	7,8
+		  
+VER_ABS	  LA	4,0
+		  LA	6,0
+		  IC	4,EXP_0		
+          IC	6,EXP_1
+          SR	4,6
+          C		4,=F'0'
+          BE	SOR
+          BH	FIRHIG
+          BL	FIRLOW
+* RESTO 16 QUE ES LO QUE SE CONSIDERA ABSORCION
+FIRHIG	  C		4,=F'16'
+          BH	ABS_FIR
+* BIFURCO SI SE ES MAYOR A 16 YA QUE ESO ES LO QUE CONSIDERO ABSORCION
+          LA	6,EXP_1
+
+          L		7,MNT_1        
+          SRL	7,1
+          ST	7,MNT_1        
+          LA	6,1(1)
+          ST	6,EXP_1
+          B		VER_ABS
+*********************************************
+ABS_FIR	  MVC	EXP_2,EXP_0
+		  MVC	NUM_2,NUM_0
+		  MVC	SIG_2,SIG_0
+		  B		OPERAR
+*********************************************		  
+FIRLOW	  C		4,=F'-16'
+          BL	ABS_SEC
+* BIFURCO SI SE ES MENOR A 16 YA QUE ESO ES LO QUE CONSIDERO ABSORCION
+          L 	4,EXP_0
+
+          L		5,MNT_0        
+          SRL	5,1
+          ST	5,MNT_0        
+          LA	4,1(1)
+          ST	4,EXP_0
+          B		VER_ABS
+          
+*********************************************
+
+ABS_SEC	  MVC	EXP_2,EXP_1
+		  MVC	NUM_2,NUM_1
+		  MVC	SIG_2,SIG_1
+		  B		OPERAR
+*********************************************		  
+          LR	8,5
+          
+SOR       CLI   CHARAUX,C'S'
+          BE    SUMA
+          CLI   CHARAUX,C'R'
+          BE    RESTA
+          
+SUMA      AR	8,7
+		  B		SIGUESR
+RESTA	  SR	8,7
+SIGUESR   MVC	EXP_2,EXP_0
+          ST	8,NUM_2
+          CL	8,=F'0'
+          BNL	POSITV
+          MVC	SIG_2,=F'1'
+          LA	9,0
+          SR	9,8
+          ST	9,NUM_2
+POSITV    L		9,NUM_2
+		  LA	8,0
+          SLDL	8,9
+          CL	8,=F'1'
+* LO QUE HAGO ES AUMENTAR EL EXPONENTE EN 1 Y DEZPLAZAR UN LUGAR
+* LA MANTIZA, ASI ABSORBO EL RESULTADO EN LA MANTIZA, TENDRIA QUE 
+* COMPROBAR QUE EL EXPONENTE NO SEA MAYOR A 127.
+          BNE	NOT_AUM
+          L		7,EXP_2
+          AR	8,7
+          C		8,=F'127'
+          BH	OVERFLOW
+          ST	8,EXP_2
+          SRL	9,1
+          
+NOT_AUM   L		8,EXP_2
+          SRDL	8,8
+          L		8,SIG_2
+          SRDL	8,1
+          ST	9,NUM_2
+          
+          B		OPERAR
+
+*********************************************
+*IEEE 754 C546D800
+
+*********************************************
+*			      OVERFLOW					*
+*********************************************
+OVERFLOW  MVC   LONGSAL,=H'45'
+          MVC   SALIDA(41),=C'EL RESULTADO DE LA OPERACION DIO OVERFLOW'
+          BAL   12,IMPRIMIR
+
+
+*********************************************
+*			DEFINICION VARIABLES			*
+*********************************************
+SIG_0	  DS	F
+SIG_1	  DS	F
+SIG_2	  DS	F
+
+NUM_0	  DS	F
+NUM_1	  DS	F
+NUM_2	  DS	F
+
+EXP_0	  DS	C
+EXP_1	  DS	C
+EXP_2	  DS	C
+
+MNT_0	  DS	F
+MNT_1	  DS	F
+MNT_2	  DS	F
+*********************************************
+CHARAUX	  DC	C'S'
+HEXA	  DC   	CL8'00000000'
+WAITHEXA  DC 	F'0'
+
+FULLAUX	  DC	F'0'
+
+*********************************************
+
+SIGNO	  DC	X'0'
+
+BINA_0	  DC	C'0DF40000'
+BINA_1	  DC	C'45C6D800'
+
+
+LONGSAL	  DC	H'132'
+          DC	H'0'
+SALIDA	  DC	128C'0'
+
+*********************************************
+*			IMPRIMIR POR PATALLA			*
+*********************************************
+IMPRIMIR  WTO	MF=(E,SALIDA-4)
+          BR	12
+*********************************************
+*			CONVERTIR A BINARIO				*
+*********************************************
+XTOBIN    LA 	6,0
+		  SLDL	6,8
+		  C		6,=F'193'
+		  BL	FINHEX
+		  C		6,=F'199'
+		  BL	CONVCHAR
+		  C		6,=F'240'
+		  BL	ERROR
+		  C		6,=F'249'
+		  BH	ERROR
+CONVDEC	  S		6,=F'240'
+		  B		SAVERES
+CONVCHAR  S		6,=F'193'
+		  A		6,=F'10'
+SAVERES   L		4,FULLAUX
+		  SLL	4,4
+		  AR	6,4
+		  ST	6,FULLAUX
+		  B		XTOBIN
+* AHORA TENDRIA QUE TRANSFORMAR EL 
+* EXPONENTE EN EXCESO
+* AL EXPONENTE COMUN
+* Y LUEGO ALMACENAR
+FINHEX	  BR	12
+          END
