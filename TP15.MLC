@@ -1,156 +1,426 @@
-TP15	  SUBENTRY BASES=(3)
+* LISTA DE PENDIENTES
+*   -VERIFICAR EL CORRECTO FUNCIONAMIENTO DE LA SUMA.
+*   -HACER EL SELECCIONADOR DE NUMEROS PARA OPERACIONES.
+*   -HACER LA FUNCION QUE DEVUELVE EL NUMERO DE OVER UNDER.
+*   -INSERTAR LAS SUBRUTINAS QUE ESCRIBEN POR PATALLA.
+*   -VERIFICAR SI EXISTE UNDERFLOW O OVERFLOW
+*
+*   -MODIFICAR IMPLEMENTACION DE LA SUMA Y EL ALMACENAR NUMEROS
+* PARA QUE SEA UN NUMERO DESNORMALIZADO Y FACILITAR ASI LA SUMA.
 
-          WTOR  'DESEA INGRESAR OTRO NUMERO?',AUX,,WAITORD
-          WAIT	ECB=WAITORD
-          MVC   ORDEN(1),AUX
-          CLI	ORDEN,C'S'
-          BNE	SEGUIR
-          
-          MVC	LONGSAL,=H'20'
-		  MVC	SALIDA,=C'ELIJA FORMATO DE ENTRADA'
-		  BAL	12,IMPRIMIR
-          MVC	SALIDA,=C'H PARA IEE754 CONFIGURACION HEXA'
-		  BAL	12,IMPRIMIR
-		  MVC	SALIDA,=C'B PARA CIENTIFICO CONFIGURACION BINARIA'
-		  BAL	12,IMPRIMIR
-		  WTOR  'SELECCIONE FORMATO?',AUX,,WAITORD
-          WAIT	ECB=WAITORD
+TP15      SUBENTRY BASES=(3)
+OTRONUM   L     4,DEZPL
+          C     4,=F'320'
+          BNL   OPERAR
+* EN HEXA 140
+
+          WTOR 'DESEA INGRESAR OTRO NUMERO?',CHARAUX,,WAITORD
+          WAIT ECB=WAITORD
+          CLI  CHARAUX,C'S'
+          BNE  OPERAR
+
+          MVC   LONGSAL,=H'28'
+          MVC   SALIDA(28),=C'ELIJA FORMATO DE ENTRADA'
+          BAL   12,IMPRIMIR
+          MVC   LONGSAL,=H'36'
+          MVC   SALIDA(36),=C'H PARA IEE754 CONFIGURACION HEXA'
+          BAL   12,IMPRIMIR
+          MVC   LONGSAL,=H'43'
+          MVC   SALIDA(43),=C'B PARA CIENTIFICO CONFIGURACION BINARIA'
+          BAL   12,IMPRIMIR
+
+SELECTF   WTOR  'SELECCIONE FORMATO?',CHARAUX,,WAITORD
+          WAIT  ECB=WAITORD
+          CLI   CHARAUX,C'H'
+          BE    CONVHEX
+          CLI   CHARAUX,C'B'
+          BE    CONVBIN
+* SI LLEGO HASTA ACA HAY ERROR EN LETRA, TENDRIA QUE PREGUNTAR DE
+* NUEVO.
+          BNE   SELECTF
+
+CONT      L     4,DEZPL
+          LA    4,4(4)
+          ST    4,DEZPL
+          B     OTRONUM
+
 
 EXIT      SUBEXIT
 *********************************************
-*			DEFINICION VARIABLES			*
-*********************************************	
-* DEFINO UN BUFFER DE 128 CARACTERES PARA PODER 
-* IMPRIMIR CADA UNA DE LAS VARIABLES CON UN SOLO
-* WTO.
-LONGSAL	  DC	H'132'
-          DC	H'0'
-SALIDA	  DC	128CL1'0'
+*           DEFINICION VARIABLES            *
 *********************************************
-ENTERA    DC   	CL8'00000000'
-WAITENT	  DC 	F'0'
+* DEFINO UN BUFFER DE 128 CARACTERES PARA PODER IMPRIMIR CADA UNA DE
+* LAS VARIABLES CON UN SOLO WTO.
+LONGSAL   DC    H'260'
+          DC    H'0'
+SALIDA    DS    256'0'
+*********************************************
+TABNUM    DC    10F'0'
 
-DECIMAL   DC  	CL16'0000000000000000'
-WAITDEC	  DC 	F'0'
+DOBLE     DS    D
+FULLAUX   DS    F
+DIREAUX   DS    F
+BINFLOT   DC    F'0'
+DEZPL     DC    F'0'
+SIGNO     DC    X'0'
 
-EXPONETE  DC   	CL8'00000000'
-WAITEXP	  DC 	F'0'
+CHARAUX   DS    C
+WAITORD   DC    F'0'
 
-DECPACK	  DC	D'0'
-ENTPACK	  DC	F'0'
-EXPPACK	  DC	F'0'
+ENTERA    DC    CL8'00000000'
+WAITENT   DC    F'0'
+
+DECIMAL   DC    CL16'0000000000000000'
+WAITDEC   DC    F'0'
+
+EXPONETE  DC    CL8'00000000'
+WAITEXP   DC    F'0'
+
+DECBIN    DC    D'0'
+ENTBIN    DC    F'0'
+EXPBIN    DC    F'0'
 
 *********************************************
-HEXA	  DC   	CL8'00000000'
-WAITHEXA  DC 	F'0'
-CONHEXA	  DC	F'0'
-SUBHEXA	  DC	F'10'
+
+HEXA      DC    CL8'00000000'
+WAITHEXA  DC    F'0'
 
 *********************************************
-*	   CONVERTIR CIENTIFICO A BINARIO		*
+*        ALMACENAR EN TABLA NUMEROS         *
+*********************************************
+ALMFULL   L     4,DEZPL
+          LA    5,TABNUM
+          AR    5,4
+          MVC   0(4,5),FULLAUX
+          B     CONT
+*********************************************
+*           IMPRIMIR POR PATALLA            *
+*********************************************
+IMPRIMIR  WTO   MF=(E,SALIDA-4)
+          BR    12
+*********************************************
+*        OPERACION ENTRE DOS NUMEROS        *
+*********************************************
+OPERAR    MVC   LONGSAL,=H'29'
+          MVC   SALIDA(25),=C'OPERACIONES DISPONIBLES: '
+          BAL   12,IMPRIMIR
+          MVC   LONGSAL,=H'29'
+          MVC   SALIDA(25),=C'S - SUMA ENTRE 2 NUMEROS.'
+          BAL   12,IMPRIMIR
+          MVC   LONGSAL,=H'31'
+          MVC   SALIDA(27),=C'R - RESTA ENTRE 2 NUMEROS.'
+          BAL   12,IMPRIMIR
+          MVC   LONGSAL,=H'36'
+          MVC   SALIDA(32),=C'H - HALLAR OVERFLOW O UNDERFLOW.'
+          BAL   12,IMPRIMIR
+          MVC   LONGSAL,=H'30'
+          MVC   SALIDA(26),=C'F - FINALIZAR OPERACIONES.'
+          BAL   12,IMPRIMIR
+
+          WTOR  'SELECCIONE OPERACION A REALIZAR',CHARAUX,,WAITORD
+          WAIT  ECB=WAITORD
+          CLI   CHARAUX,C'H'
+          BE    OVEUND
+          CLI   CHARAUX,C'S'
+          BE    SUMRES
+          CLI   CHARAUX,C'R'
+          BE    SUMRES
+          CLI   CHARAUX,C'F'
+          BE    EXIT
+          B     OPERAR
+*********************************************
+*                   SUMRES                  *
+*********************************************
+SUMRES    LA    4,0
+          L     5,NUM_0
+          LA    6,0
+          L     7,NUM_1
+
+          SLDL  4,1
+          ST    4,SIG_0
+          CL    4,=F'1'
+          LA    4,0
+          BNE   POS_0
+          SLDL  4,8
+          ST    4,EXP_0
+          SRL   5,9
+          LR    8,5
+          LA    5,0
+          SR    5,8
+
+POS_0     SLDL  6,1
+          ST    6,SIG_1
+          CL    6,=F'1'
+          LA    6,0
+          BNE   VER_ABS
+          SLDL  6,8
+          ST    6,EXP_1
+          SRL   7,9
+          LR    8,7
+          LA    7,0
+          SR    7,8
+
+VER_ABS   LA    4,0
+          LA    6,0
+          IC    4,EXP_0
+          IC    6,EXP_1
+          SR    4,6
+          C     4,=F'0'
+          BE    SOR
+          BH    FIRHIG
+          BL    FIRLOW
+* RESTO 16 QUE ES LO QUE SE CONSIDERA ABSORCION
+FIRHIG    C     4,=F'16'
+          BH    ABS_FIR
+* BIFURCO SI SE ES MAYOR A 16 YA QUE ESO ES LO QUE CONSIDERO ABSORCION
+          LA    6,EXP_1
+
+          L     7,MNT_1
+          SRL   7,1
+          ST    7,MNT_1
+          LA    6,1(1)
+          ST    6,EXP_1
+          B     VER_ABS
+*********************************************
+ABS_FIR   MVC   EXP_2,EXP_0
+          MVC   NUM_2,NUM_0
+          MVC   SIG_2,SIG_0
+          B     OPERAR
+*********************************************
+FIRLOW    C     4,=F'-16'
+          BL    ABS_SEC
+* BIFURCO SI SE ES MENOR A 16 YA QUE ESO ES LO QUE CONSIDERO ABSORCION
+          L     4,EXP_0
+
+          L     5,MNT_0
+          SRL   5,1
+          ST    5,MNT_0
+          LA    4,1(1)
+          ST    4,EXP_0
+          B     VER_ABS
+
+*********************************************
+
+ABS_SEC   MVC   EXP_2,EXP_1
+          MVC   NUM_2,NUM_1
+          MVC   SIG_2,SIG_1
+          B     OPERAR
+*********************************************
+          LR    8,5
+
+SOR       CLI   CHARAUX,C'S'
+          BE    SUMA
+          CLI   CHARAUX,C'R'
+          BE    RESTA
+
+SUMA      AR    8,7
+          B     SIGUESR
+RESTA     SR    8,7
+SIGUESR   MVC   EXP_2,EXP_0
+          ST    8,NUM_2
+          CL    8,=F'0'
+          BNL   POSITV
+          MVC   SIG_2,=F'1'
+          LA    9,0
+          SR    9,8
+          ST    9,NUM_2
+POSITV    L     9,NUM_2
+          LA    8,0
+          SLDL  8,9
+          CL    8,=F'1'
+* LO QUE HAGO ES AUMENTAR EL EXPONENTE EN 1 Y DEZPLAZAR UN LUGAR
+* LA MANTIZA, ASI ABSORBO EL RESULTADO EN LA MANTIZA, TENDRIA QUE
+* COMPROBAR QUE EL EXPONENTE NO SEA MAYOR A 127.
+          BNE   NOT_AUM
+          L     7,EXP_2
+          AR    8,7
+          C     8,=F'127'
+          BH    OVERFLOW
+          ST    8,EXP_2
+          SRL   9,1
+
+NOT_AUM   L     8,EXP_2
+          SRDL  8,8
+          L     8,SIG_2
+          SRDL  8,1
+          ST    9,NUM_2
+
+          B     OPERAR
+
+*********************************************
+*      CONVERTIR CIENTIFICO A BINARIO       *
 *********************************************
 
 CONVBIN   WTOR  'INGRESE PARTE ENTERA',ENTERA,,WAITENT
-          WAIT	ECB=WAITENT
+          WAIT  ECB=WAITENT
           WTOR  'INGRESE PARTE DECIMAL',DECIMAL,,WAITDEC
-          WAIT	ECB=WAITDEC
+          WAIT  ECB=WAITDEC
           WTOR  'INGRESE EXPONETE',EXPONETE,,WAITEXP
-          WAIT	ECB=WAITEXP          
+          WAIT  ECB=WAITEXP
 
-		  LA	4,DECIMAL
-		  LA	5,DECPACK		  
-		  BAL	12,LOADBIN
-		  LA	4,DECIMAL+4
-		  BAL	12,LOADBIN
-		  MVC	SALIDA,DECIMAL
-		  MVC	LONGSAL,=H'20'
-		  BAL 	12,IMPRIMIR
+* CONVIERTE PARTE DECIMAL A BINARIO.
+* LA PARTE DECIMAL SE INGRESA EN FORMATO BPF S/S 16 BITS.
+          LA    4,DECIMAL
+          LA    5,DECBIN
+          BAL   12,LOADBIN
+          LA    4,DECIMAL+4
+          BAL   12,LOADBIN
+          LA    4,DECIMAL+8
+          BAL   12,LOADBIN
+          LA    4,DECIMAL+12
+          BAL   12,LOADBIN
 
-		  LA	4,ENTERA
-		  LA	5,ENTPACK		  
-		  BAL	12,LOADBIN
-		  LA	4,ENTERA+4
-		  BAL	12,LOADBIN		  
-		  MVC	LONGSAL,=H'12'
-		  MVC	SALIDA,ENTERA
-		  BAL	12,IMPRIMIR
+* CONVIERTE PARTE ENTERA A BINARIO.
+          LA    4,ENTERA
+          LA    5,ENTBIN
+          BAL   12,LOADBIN
+          LA    4,ENTERA+4
+          BAL   12,LOADBIN
+* VERIFICA EL SIGNO DE LA PARTE ENTERA. LA PARTE ENTERA SE INGRESA EN
+* FORMATO BPF C/S 8 BITS Y SE LA CONVIERTE EN BPF S/S 8 BITS.
+          L     4,ENTBIN
+          SRL   4,7
+          CL    4,=F'1'
+          BNE   POSITIVO
+          L     5,ENTBIN
+          LA    4,0
+          SR    4,5
+          LA    4,1(4)
+          ST    4,ENTBIN
+          MVI   SIGNO,X'1'
 
-		  LA	4,EXPONETE
-		  LA	5,EXPPACK		  
-		  BAL	12,LOADBIN
-		  LA	4,EXPONETE+4
-		  BAL	12,LOADBIN
-		  MVC	LONGSAL,=H'12'
-		  MVC	SALIDA,EXPONETE
-		  BAL	12,IMPRIMIR
+* CONVIERTE PARTE EXPONENTE A BINARIO.EL EXPONENTE SE INGRESA EN
+* BPF C/S 8 BITS.
+POSITIVO  LA    4,EXPONETE
+          LA    5,EXPBIN
+          BAL   12,LOADBIN
+          LA    4,EXPONETE+4
+          BAL   12,LOADBIN
 
+          L     4,ENTBIN
+          L     5,DECBIN
+          SLL   5,16
+          L     6,EXPBIN
+          LA    7,0
+* NORMALIZA LA PARTE ENTERA.
+          CL    4,=F'0'
+          BE    DSNMLIZA
+
+NMLIZA    CL    4,=F'1'
+          BE    NMLIZADO
+          SRDL  4,1
+          LA    6,1(6)
+          B     NMLIZA
+
+
+DSNMLIZA  CL    5,=F'0'
+          BE    FINDSNM
+          CL    4,=F'1'
+          BE    FINDSNM
+          SLDL  4,1
+          LA    7,1(7)
+          B     DSNMLIZA
+FINDSNM   SR    6,7
+
+NMLIZADO  ST    4,ENTBIN
+          ST    5,DECBIN
+          ST    6,EXPBIN
+
+          L     5,DECBIN
+          L     4,EXPBIN
+          SRDL  4,8
+          LA    4,0
+          IC    4,SIGNO
+          SRDL  4,1
+          ST    5,FULLAUX
+* ALMACENAR EN LA TABLA DE NUMEROS.
+          B     ALMFULL
 *********************************************
-*			IMPRIMIR POR PATALLA			*
+*     CONVERTIR CHAR BINARIO A BINARIO      *
 *********************************************
-IMPRIMIR  WTO	MF=(E,SALIDA-4)
-          BR	12
 
 * PARTE ENTERA DESIGNA EL SIGNO.
-* ENT		00000111
-* DEC		1010000000000000
-* EXP		00011001
-CONVABIN  PACK	0(8,5),0(8,4)
-		  CVB	4,0(0,5)
-		  LA	6,0
-		  ST	6,0(0,5)
-		  ST	4,4(0,5)
-		  BR	12
+* ENT       00000111
+* DEC       1010000000000000
+* EXP       00011001
 
-LOADBIN	  L		7,0(0,4)
-OTRO	  LA	6,0
-		  SLDL	6,8
-		  C		6,=F'0'
-		  BE	FINX
-		  C		6,=F'240'
-		  BL	ERROR
-		  C		6,=F'249'
-		  BH	ERROR
-		  S		6,=F'240'
-		  L		8,0(0,5)
-		  SLL	8,1
-		  AR	6,8
-		  ST	6,0(0,5)
-		  B		OTRO
-FINX	  BR	12
+LOADBIN   L     7,0(0,4)
+OTROBIN   LA    6,0
+          SLDL  6,8
+          C     6,=F'0'
+          BE    FINBIN
+          C     6,=F'240'
+          BL    FINBIN
+          C     6,=F'249'
+          BH    FINBIN
+          S     6,=F'240'
+          L     8,0(0,5)
+          SLL   8,1
+          AR    6,8
+          ST    6,0(0,5)
+          B     OTROBIN
+FINBIN    BR    12
 
 *********************************************
-*		CONVERTIR IEEE754 A BINARIO			*
+*     CONVERTIR HEXA IEEE754 A BINARIO      *
 *********************************************
 CONVHEX   WTOR  'INGRESE NUMERO EN FORMATO HEXA',HEXA,,WAITHEXA
-          WAIT	ECB=WAITHEXA
-		  L		7,HEXA
-		  BAL	12,XTOBIN
-		  L		7,HEXA+4
-		  BAL	12,XTOBIN
-		  L		4,CONHEXA
-		  MVC	SALIDA,HEXA
-		  BAL	12,IMPRIMIR
-*IEEE 754 C546D800
+          WAIT  ECB=WAITHEXA
+          L     7,HEXA
+          BAL   12,HEXTOBIN
+          L     7,HEXA+4
+          BAL   12,HEXTOBIN
 
-XTOBIN    LA 	6,0
-		  SLDL	6,8
-		  C		6,=F'193'
-		  BL	FINX
-		  C		6,=F'199'
-		  BL	CONVCHAR
-		  C		6,=F'240'
-		  BL	ERROR
-		  C		6,=F'249'
-		  BH	ERROR
-CONVDEC	  S		6,=F'240'
-		  B		SAVERES
-CONVCHAR  S		6,=F'193'
-		  A		6,=F'10'
-SAVERES   L		4,CONHEXA
-		  SLL	4,4
-		  AR	6,4
-		  ST	6,CONHEXA
-		  B		XTOBIN
-FINX	  BR	12
+          LA    4,0
+          L     5,FULLAUX
+          SLDL  4,1
+          STC   4,SIGNO
+          LA    4,0
+          SLDL  4,8
+          LA    6,127
+          SR    4,6
+          SRDL  4,8
+          IC    4,SIGNO
+          SRDL  4,1
+          ST    5,FULLAUX
+* ALMACENAR EN LA TABLA DE NUMEROS.
+          B     ALMFULL
+*********************************************
+*                HEXTOBIN                   *
+*********************************************
+
+HEXTOBIN  LA    6,0
+          SLDL  6,8
+          C     6,=F'193'
+          BL    FINHEX
+          C     6,=F'199'
+          BL    CONVCHAR
+          C     6,=F'240'
+          BL    FINHEX
+          C     6,=F'249'
+          BH    FINHEX
+CONVDEC   S     6,=F'240'
+          B     SAVERES
+CONVCHAR  S     6,=F'193'
+          A     6,=F'10'
+SAVERES   L     4,FULLAUX
+          SLL   4,4
+          AR    6,4
+          ST    6,FULLAUX
+          B     HEXTOBIN
+* AHORA TRANSFORMO EL EXPONENTE EN EXCESO AL EXPONENTE COMUN
+FINHEX    LA    4,0
+          L     5,FULLAUX
+          SLDL  4,1
+          STC   4,SIGNO
+          LA    4,0
+          SLDL  4,8
+          S     4,=F'127'
+          SRDL  4,8
+          LA    4,0
+          IC    4,SIGNO
+          SRDL  4,1
+          ST    5,FULLAUX
+          BR    12
 
           END
