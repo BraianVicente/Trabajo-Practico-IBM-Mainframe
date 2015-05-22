@@ -1,12 +1,9 @@
 * LISTA DE PENDIENTES
-*   -VERIFICAR EL CORRECTO FUNCIONAMIENTO DE LA SUMA.
+*	-CAMBIAR FORMA DE INGRESAR FORMATO CIENTIFICO.
 *   -HACER EL SELECCIONADOR DE NUMEROS PARA OPERACIONES.
 *   -HACER LA FUNCION QUE DEVUELVE EL NUMERO DE OVER UNDER.
 *   -INSERTAR LAS SUBRUTINAS QUE ESCRIBEN POR PATALLA.
-*   -VERIFICAR SI EXISTE UNDERFLOW O OVERFLOW
-*
-*   -MODIFICAR IMPLEMENTACION DE LA SUMA Y EL ALMACENAR NUMEROS
-* PARA QUE SEA UN NUMERO DESNORMALIZADO Y FACILITAR ASI LA SUMA.
+*	-AGREGAR COMO SE MUESTRA EN PANTALLA.
 
 TP15      SUBENTRY BASES=(3)
 OTRONUM   L     4,DEZPL
@@ -111,7 +108,7 @@ OPERAR    MVC   LONGSAL,=H'29'
           MVC   SALIDA(27),=C'R - RESTA ENTRE 2 NUMEROS.'
           BAL   12,IMPRIMIR
           MVC   LONGSAL,=H'36'
-          MVC   SALIDA(32),=C'H - HALLAR OVERFLOW O UNDERFLOW.'
+          MVC   SALIDA(32),=C'H - HALLAR OVERFLOW Y UNDERFLOW.'
           BAL   12,IMPRIMIR
           MVC   LONGSAL,=H'30'
           MVC   SALIDA(26),=C'F - FINALIZAR OPERACIONES.'
@@ -128,6 +125,8 @@ OPERAR    MVC   LONGSAL,=H'29'
           CLI   CHARAUX,C'F'
           BE    EXIT
           B     OPERAR
+
+
 *********************************************
 *                   SUMRES                  *
 *********************************************
@@ -138,115 +137,142 @@ SUMRES    LA    4,0
 
           SLDL  4,1
           ST    4,SIG_0
-          CL    4,=F'1'
           LA    4,0
-          BNE   POS_0
           SLDL  4,8
           ST    4,EXP_0
-          SRL   5,9
-          LR    8,5
-          LA    5,0
-          SR    5,8
-
-POS_0     SLDL  6,1
+          SLDL	4,23
+          ST	4,MNT_0
+          
+          SLDL  6,1
           ST    6,SIG_1
-          CL    6,=F'1'
           LA    6,0
-          BNE   VER_ABS
           SLDL  6,8
           ST    6,EXP_1
-          SRL   7,9
-          LR    8,7
-          LA    7,0
-          SR    7,8
+          SLDL	6,23
+          ST	6,MNT_1
+          
+          L		4.EXP_0
+          L		6,EXP_1
+          CR	4,6
+          BH	EQU_SEC
+          BL	EQU_FIR
+* VERIFICO QUE LOS SIGNOS SEAN IGUALES
+* SI SON IGUALES, SE REALIZAN LAS OPERACIONES TAL CUAL ESTA.
+CMP_SIG   CLC   SIG_0,SIG_1
+          BE	MISM_SIG
+          CLI   SIG_0,F'1'
+          BE    FIR_NEG
+          CLI   SIG_1,F'1'
+          BE    SEC_NEG
+          
+EQU_SEC   L		7,MNT_1
+		  SR	4,6
+		  C 	4,=F'15'
+		  BH	ABS_FIR
+		  SLL	7,1
+		  LA	6,1(6)
+		  BCT   4
+		  ST	7,MNT_1
+		  B		CMP_SIG
 
-VER_ABS   LA    4,0
-          LA    6,0
-          IC    4,EXP_0
-          IC    6,EXP_1
-          SR    4,6
-          C     4,=F'0'
-          BE    SOR
-          BH    FIRHIG
-          BL    FIRLOW
-* RESTO 16 QUE ES LO QUE SE CONSIDERA ABSORCION
-FIRHIG    C     4,=F'16'
-          BH    ABS_FIR
-* BIFURCO SI SE ES MAYOR A 16 YA QUE ESO ES LO QUE CONSIDERO ABSORCION
-          LA    6,EXP_1
+EQU_FIR   L		5,MNT_0
+		  SR	6,4
+		  C 	6,=F'15'
+		  BH	ABS_SEC
+		  SLL	5,1
+		  LA	4,1(4)
+		  BCT   6
+		  ST	5,MNT_1
+		  B		CMP_SIG
+		  
+FIR_NEG   CLI	CHARAUX,C'S'
+		  LA	4,1
+		  BE	2_ADD_1
+* SIGNO SIEMPRE NEGATIVO
+* SI A ALGO NEGATIVO LE "RESTO" EL RESULTADO DA NEGATIVO.
+		  L		6,EXP_0
+		  L		5,MNT_0
+		  L		7,MNT_1
+		  AR	5,7
+	      B		ST_RES
 
-          L     7,MNT_1
-          SRL   7,1
-          ST    7,MNT_1
-          LA    6,1(1)
-          ST    6,EXP_1
-          B     VER_ABS
-*********************************************
-ABS_FIR   MVC   EXP_2,EXP_0
-          MVC   NUM_2,NUM_0
-          MVC   SIG_2,SIG_0
+2_ADD_1   SR	5,7
+		  CL	5,F'0'
+		  BNL	RES_POS
+		  LA	4,0
+		  LR	7,5
+		  LA	5,0
+		  SR	5,7
+RES_POS   B		ST_RES
+
+SEC_NEG   CLI	CHARAUX,C'S'
+		  BE	1_ADD_2
+		  LA	4,0
+		  L		6,EXP_0
+		  L		5,MNT_0
+		  L		7,MNT_1
+		  AR	5,7
+SUM_POS   B 	STR_RES
+
+1_ADD_2   SR	5,5
+		  CL	5,F'0'
+		  BNL	RES_POS
+		  LA	4,1
+		  LR	7,5
+		  LA	5,0
+		  SR	7,5
+RES_POS   B		ST_RES
+		  
+STR_RES   ST	4,SIG_2
+		  ST	6,EXP_2
+		  ST	5,MNT_2
+* AHORA TENDRIA QUE VERIFICAR SI EXISTE OVERFLOW EN EL RESULTADO
+* O SI EXISTE UNDERFLOR.
+          LA	4,0
+          LA	7,0
+          LA	8,16
+          L		5,MNT_2
+          L		6,EXP_2
+          SLDL	4,9
+          CL	4,=F'1'
+          BE	SUM_EXP
+          
+OTR_EXP	  SLDL	4,1
+		  CL	4,=F'1'
+          BE	RES_EXP
+          LA	7,1(7)
+          BCT	8,OTR_EXP
+* SI TERMINA EL BCT ENTONCES ES PORQUE HAY OVERFLOW.
+          B		UNDRFLOW
+          
+RES_EXP	  SR	6,7
+	      CL	6,=F'1'
+	      BL	UNDRFLOW
+          B		STR_2
+
+SUM_EXP	  AR	6,7
+          CL	6,=F'254'
+          BH	OVERFLOW
+
+STR_2     SRL	5,9
+          ST	5,MNT_2
+          ST	6,EXP_2
+
           B     OPERAR
 *********************************************
-FIRLOW    C     4,=F'-16'
-          BL    ABS_SEC
-* BIFURCO SI SE ES MENOR A 16 YA QUE ESO ES LO QUE CONSIDERO ABSORCION
-          L     4,EXP_0
-
-          L     5,MNT_0
-          SRL   5,1
-          ST    5,MNT_0
-          LA    4,1(1)
-          ST    4,EXP_0
-          B     VER_ABS
-
+*			      OVERFLOW					*
 *********************************************
-
-ABS_SEC   MVC   EXP_2,EXP_1
-          MVC   NUM_2,NUM_1
-          MVC   SIG_2,SIG_1
+OVERFLOW  MVC   LONGSAL,=H'20'
+          MVC   SALIDA(16),=C'ERROR  OVERFLOW.'
+          BAL   12,IMPRIMIR
           B     OPERAR
 *********************************************
-          LR    8,5
-
-SOR       CLI   CHARAUX,C'S'
-          BE    SUMA
-          CLI   CHARAUX,C'R'
-          BE    RESTA
-
-SUMA      AR    8,7
-          B     SIGUESR
-RESTA     SR    8,7
-SIGUESR   MVC   EXP_2,EXP_0
-          ST    8,NUM_2
-          CL    8,=F'0'
-          BNL   POSITV
-          MVC   SIG_2,=F'1'
-          LA    9,0
-          SR    9,8
-          ST    9,NUM_2
-POSITV    L     9,NUM_2
-          LA    8,0
-          SLDL  8,9
-          CL    8,=F'1'
-* LO QUE HAGO ES AUMENTAR EL EXPONENTE EN 1 Y DEZPLAZAR UN LUGAR
-* LA MANTIZA, ASI ABSORBO EL RESULTADO EN LA MANTIZA, TENDRIA QUE
-* COMPROBAR QUE EL EXPONENTE NO SEA MAYOR A 127.
-          BNE   NOT_AUM
-          L     7,EXP_2
-          AR    8,7
-          C     8,=F'127'
-          BH    OVERFLOW
-          ST    8,EXP_2
-          SRL   9,1
-
-NOT_AUM   L     8,EXP_2
-          SRDL  8,8
-          L     8,SIG_2
-          SRDL  8,1
-          ST    9,NUM_2
-
+*			      UNDERFLOW					*
+*********************************************
+UNDRFLOW  MVC   LONGSAL,=H'20'
+          MVC   SALIDA(16),=C'ERROR UNDERFLOW.'
+          BAL   12,IMPRIMIR
           B     OPERAR
-
 *********************************************
 *      CONVERTIR CIENTIFICO A BINARIO       *
 *********************************************
@@ -377,8 +403,16 @@ CONVHEX   WTOR  'INGRESE NUMERO EN FORMATO HEXA',HEXA,,WAITHEXA
           STC   4,SIGNO
           LA    4,0
           SLDL  4,8
-          LA    6,127
-          SR    4,6
+          ST	4,FULLAUX
+* AGREGO EL 1 QUE ESTA "OCULTO" EN LA IMPLEMENTACION DEL IEEE 754.
+          LA	4,1
+          SRDL	4,1
+          L		4,FULLAUX
+          LA	4,1(4)
+* SI AGREGO LAS SIGUIENTES LINEAS ES PARA EXPONENTE COMUN, SINO ES PARA
+* EXPONENTE EN EXCESO.
+*          LA    6,127
+*          SR    4,6
           SRDL  4,8
           IC    4,SIGNO
           SRDL  4,1
