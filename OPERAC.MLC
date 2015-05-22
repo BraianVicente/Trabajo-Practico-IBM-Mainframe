@@ -1,17 +1,17 @@
-OPERAC	  SUBENTRY BASES=(3)
-		  L		7,BINA_0
-		  BAL	12,XTOBIN
-		  L		7,BINA_0+4
-		  BAL	12,XTOBIN
-          MVC	NUM_0,FULLAUX
-          
-		  L		7,BINA_1
-		  BAL	12,XTOBIN
-		  L		7,BINA_1+4
-		  BAL	12,XTOBIN
-		  MVC	NUM_1,FULLAUX
+OPERAC    SUBENTRY BASES=(3)
+          L     7,BINA_0
+          BAL   12,XTOBIN
+          L     7,BINA_0+4
+          BAL   12,XTOBIN
+          MVC   NUM_0,FULLAUX
+
+          L     7,BINA_1
+          BAL   12,XTOBIN
+          L     7,BINA_1+4
+          BAL   12,XTOBIN
+          MVC   NUM_1,FULLAUX
 OPERAR    SUBEXIT
-		  
+
 *********************************************
 *                   SUMRES                  *
 *********************************************
@@ -25,134 +25,134 @@ SUMRES    LA    4,0
           LA    4,0
           SLDL  4,8
           ST    4,EXP_0
-          SLDL	4,23
-          ST	4,MNT_0
-          
+          SLDL  4,23
+          ST    4,MNT_0
+
           SLDL  6,1
           ST    6,SIG_1
           LA    6,0
           SLDL  6,8
           ST    6,EXP_1
-          SLDL	6,23
-          ST	6,MNT_1
-          
-          L		4.EXP_0
-          L		6,EXP_1
-          CR	4,6
-          BH	EQU_SEC
-          BL	EQU_FIR
+          SLDL  6,23
+          ST    6,MNT_1
+
+          L     4.EXP_0
+          L     6,EXP_1
+          CR    4,6
+          BH    EQU_SEC
+          BL    EQU_FIR
 * VERIFICO QUE LOS SIGNOS SEAN IGUALES
 * SI SON IGUALES, SE REALIZAN LAS OPERACIONES TAL CUAL ESTA.
 CMP_SIG   CLC   SIG_0,SIG_1
-          BE	MISM_SIG
+          BE    MISM_SIG
           CLI   SIG_0,F'1'
           BE    FIR_NEG
           CLI   SIG_1,F'1'
           BE    SEC_NEG
-          
-EQU_SEC   L		7,MNT_1
-		  SR	4,6
-		  C 	4,=F'15'
-		  BH	ABS_FIR
-		  SLL	7,1
-		  LA	6,1(6)
-		  BCT   4
-		  ST	7,MNT_1
-		  B		CMP_SIG
 
-EQU_FIR   L		5,MNT_0
-		  SR	6,4
-		  C 	6,=F'15'
-		  BH	ABS_SEC
-		  SLL	5,1
-		  LA	4,1(4)
-		  BCT   6
-		  ST	5,MNT_1
-		  B		CMP_SIG
-		  
-FIR_NEG   CLI	CHARAUX,C'S'
-		  LA	4,1
-		  BE	2_ADD_1
+EQU_SEC   L     7,MNT_1
+          SR    4,6
+          C     4,=F'15'
+          BH    ABS_FIR
+          SLL   7,1
+          LA    6,1(6)
+          BCT   4
+          ST    7,MNT_1
+          B     CMP_SIG
+
+EQU_FIR   L     5,MNT_0
+          SR    6,4
+          C     6,=F'15'
+          BH    ABS_SEC
+          SLL   5,1
+          LA    4,1(4)
+          BCT   6
+          ST    5,MNT_1
+          B     CMP_SIG
+
+FIR_NEG   CLI   CHARAUX,C'S'
+          LA    4,1
+          BE    2_ADD_1
 * SIGNO SIEMPRE NEGATIVO
 * SI A ALGO NEGATIVO LE "RESTO" EL RESULTADO DA NEGATIVO.
-		  L		6,EXP_0
-		  L		5,MNT_0
-		  L		7,MNT_1
-		  AR	5,7
-	      B		ST_RES
+          L     6,EXP_0
+          L     5,MNT_0
+          L     7,MNT_1
+          AR    5,7
+          B     ST_RES
 
-2_ADD_1   SR	5,7
-		  CL	5,F'0'
-		  BNL	RES_POS
-		  LA	4,0
-		  LR	7,5
-		  LA	5,0
-		  SR	5,7
-RES_POS   B		ST_RES
+2_ADD_1   SR    5,7
+          CL    5,F'0'
+          BNL   RES_POS
+          LA    4,0
+          LR    7,5
+          LA    5,0
+          SR    5,7
+RES_POS   B     ST_RES
 
-SEC_NEG   CLI	CHARAUX,C'S'
-		  BE	1_ADD_2
-		  LA	4,0
-		  L		6,EXP_0
-		  L		5,MNT_0
-		  L		7,MNT_1
-		  AR	5,7
-SUM_POS   B 	STR_RES
+SEC_NEG   CLI   CHARAUX,C'S'
+          BE    1_ADD_2
+          LA    4,0
+          L     6,EXP_0
+          L     5,MNT_0
+          L     7,MNT_1
+          AR    5,7
+SUM_POS   B     STR_RES
 
-1_ADD_2   SR	5,5
-		  CL	5,F'0'
-		  BNL	RES_POS
-		  LA	4,1
-		  LR	7,5
-		  LA	5,0
-		  SR	7,5
-RES_POS   B		ST_RES
-		  
-STR_RES   ST	4,SIG_2
-		  ST	6,EXP_2
-		  ST	5,MNT_2
+1_ADD_2   SR    5,5
+          CL    5,F'0'
+          BNL   RES_POS
+          LA    4,1
+          LR    7,5
+          LA    5,0
+          SR    7,5
+RES_POS   B     ST_RES
+
+STR_RES   ST    4,SIG_2
+          ST    6,EXP_2
+          ST    5,MNT_2
 * AHORA TENDRIA QUE VERIFICAR SI EXISTE OVERFLOW EN EL RESULTADO
 * O SI EXISTE UNDERFLOR.
-          LA	4,0
-          LA	7,0
-          LA	8,16
-          L		5,MNT_2
-          L		6,EXP_2
-          SLDL	4,9
-          CL	4,=F'1'
-          BE	SUM_EXP
-          
-OTR_EXP	  SLDL	4,1
-		  CL	4,=F'1'
-          BE	RES_EXP
-          LA	7,1(7)
-          BCT	8,OTR_EXP
+          LA    4,0
+          LA    7,0
+          LA    8,16
+          L     5,MNT_2
+          L     6,EXP_2
+          SLDL  4,9
+          CL    4,=F'1'
+          BE    SUM_EXP
+
+OTR_EXP   SLDL  4,1
+          CL    4,=F'1'
+          BE    RES_EXP
+          LA    7,1(7)
+          BCT   8,OTR_EXP
 * SI TERMINA EL BCT ENTONCES ES PORQUE HAY OVERFLOW.
-          B		UNDRFLOW
-          
-RES_EXP	  SR	6,7
-	      CL	6,=F'1'
-	      BL	UNDRFLOW
-          B		STR_2
+          B     UNDRFLOW
 
-SUM_EXP	  AR	6,7
-          CL	6,=F'254'
-          BH	OVERFLOW
+RES_EXP   SR    6,7
+          CL    6,=F'1'
+          BL    UNDRFLOW
+          B     STR_2
 
-STR_2     SRL	5,9
-          ST	5,MNT_2
-          ST	6,EXP_2
+SUM_EXP   AR    6,7
+          CL    6,=F'254'
+          BH    OVERFLOW
+
+STR_2     SRL   5,9
+          ST    5,MNT_2
+          ST    6,EXP_2
 
           B     OPERAR
 *********************************************
-*			      OVERFLOW					*
+*                 OVERFLOW                  *
 *********************************************
 OVERFLOW  MVC   LONGSAL,=H'20'
           MVC   SALIDA(16),=C'ERROR  OVERFLOW.'
           BAL   12,IMPRIMIR
           B     OPERAR
 *********************************************
-*			      UNDERFLOW					*
+*                 UNDERFLOW                 *
 *********************************************
 UNDRFLOW  MVC   LONGSAL,=H'20'
           MVC   SALIDA(16),=C'ERROR UNDERFLOW.'
@@ -165,72 +165,72 @@ UNDRFLOW  MVC   LONGSAL,=H'20'
 
 
 *********************************************
-*			DEFINICION VARIABLES			*
+*           DEFINICION VARIABLES            *
 *********************************************
-SIG_0	  DS	F
-SIG_1	  DS	F
-SIG_2	  DS	F
+SIG_0     DS    F
+SIG_1     DS    F
+SIG_2     DS    F
 
-NUM_0	  DS	F
-NUM_1	  DS	F
-NUM_2	  DS	F
+NUM_0     DS    F
+NUM_1     DS    F
+NUM_2     DS    F
 
-EXP_0	  DS	C
-EXP_1	  DS	C
-EXP_2	  DS	C
+EXP_0     DS    C
+EXP_1     DS    C
+EXP_2     DS    C
 
-MNT_0	  DS	F
-MNT_1	  DS	F
-MNT_2	  DS	F
+MNT_0     DS    F
+MNT_1     DS    F
+MNT_2     DS    F
 *********************************************
-CHARAUX	  DC	C'S'
-HEXA	  DC   	CL8'00000000'
-WAITHEXA  DC 	F'0'
+CHARAUX   DC    C'S'
+HEXA      DC    CL8'00000000'
+WAITHEXA  DC    F'0'
 
-FULLAUX	  DC	F'0'
-
-*********************************************
-
-SIGNO	  DC	X'0'
-
-BINA_0	  DC	C'0DF40000'
-BINA_1	  DC	C'45C6D800'
-
-
-LONGSAL	  DC	H'132'
-          DC	H'0'
-SALIDA	  DC	128C'0'
+FULLAUX   DC    F'0'
 
 *********************************************
-*			IMPRIMIR POR PATALLA			*
+
+SIGNO     DC    X'0'
+
+BINA_0    DC    C'0DF40000'
+BINA_1    DC    C'45C6D800'
+
+
+LONGSAL   DC    H'132'
+          DC    H'0'
+SALIDA    DC    128C'0'
+
 *********************************************
-IMPRIMIR  WTO	MF=(E,SALIDA-4)
-          BR	12
+*           IMPRIMIR POR PATALLA            *
 *********************************************
-*			CONVERTIR A BINARIO				*
+IMPRIMIR  WTO   MF=(E,SALIDA-4)
+          BR    12
 *********************************************
-XTOBIN    LA 	6,0
-		  SLDL	6,8
-		  C		6,=F'193'
-		  BL	FINHEX
-		  C		6,=F'199'
-		  BL	CONVCHAR
-		  C		6,=F'240'
-		  BL	ERROR
-		  C		6,=F'249'
-		  BH	ERROR
-CONVDEC	  S		6,=F'240'
-		  B		SAVERES
-CONVCHAR  S		6,=F'193'
-		  A		6,=F'10'
-SAVERES   L		4,FULLAUX
-		  SLL	4,4
-		  AR	6,4
-		  ST	6,FULLAUX
-		  B		XTOBIN
-* AHORA TENDRIA QUE TRANSFORMAR EL 
+*           CONVERTIR A BINARIO             *
+*********************************************
+XTOBIN    LA    6,0
+          SLDL  6,8
+          C     6,=F'193'
+          BL    FINHEX
+          C     6,=F'199'
+          BL    CONVCHAR
+          C     6,=F'240'
+          BL    ERROR
+          C     6,=F'249'
+          BH    ERROR
+CONVDEC   S     6,=F'240'
+          B     SAVERES
+CONVCHAR  S     6,=F'193'
+          A     6,=F'10'
+SAVERES   L     4,FULLAUX
+          SLL   4,4
+          AR    6,4
+          ST    6,FULLAUX
+          B     XTOBIN
+* AHORA TENDRIA QUE TRANSFORMAR EL
 * EXPONENTE EN EXCESO
 * AL EXPONENTE COMUN
 * Y LUEGO ALMACENAR
-FINHEX	  BR	12
+FINHEX    BR    12
           END
