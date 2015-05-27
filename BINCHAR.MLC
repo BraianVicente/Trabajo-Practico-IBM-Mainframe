@@ -1,0 +1,33 @@
+BINCHAR   SUBENTRY BASES =(3)
+          L     5,BINA_0
+          BAL   12,PR_IBIN
+          BAL   12,IMPRIMIR
+          SUBEXIT
+*********************************************
+*                   PR_IBIN                 *
+*********************************************
+PR_IBIN   LA    6,240
+          LA    7,CHAR_0
+          LA    9,32
+IEEE      LA    4,0
+          SLDL  4,1
+          AR    4,6
+          STC   4,0(0,7)
+          LA    7,1(7)
+          BCT   9,IEEE
+          MVC   SALIDA(32),CHAR_0
+          MVC   LONGSAL,=H'36'
+          BR    12
+*********************************************
+BINA_0    DC    X'0DF40000'
+BINA_1    DC    X'85C6D800'
+CHAR_0    DC    32C'0'
+LONGSAL   DC    H'260'
+          DC    H'0'
+SALIDA    DS    256C'0'
+*********************************************
+*           IMPRIMIR POR PATALLA            *
+*********************************************
+IMPRIMIR  WTO   MF=(E,SALIDA-4)
+          BR    12
+          END
