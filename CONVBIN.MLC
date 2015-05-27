@@ -1,97 +1,182 @@
 CONVBIN   SUBENTRY BASES=(3)
+*CONVBIN      WTOR  'INGRESE PARTE ENTERA',ENTERA,,WAITENT
           WTOR  'INGRESE PARTE ENTERA',ENTERA,,WAITENT
-          WAIT	ECB=WAITENT
+          WAIT  ECB=WAITENT
           WTOR  'INGRESE PARTE DECIMAL',DECIMAL,,WAITDEC
-          WAIT	ECB=WAITDEC
+          WAIT  ECB=WAITDEC
           WTOR  'INGRESE EXPONETE',EXPONETE,,WAITEXP
-          WAIT	ECB=WAITEXP          
+          WAIT  ECB=WAITEXP
 
-		  LA	4,DECIMAL
-		  LA	5,DECPACK		  
-		  BAL	12,LOADBIN
-		  LA	4,DECIMAL+4
-		  BAL	12,LOADBIN
-		  MVC	SALIDA,DECIMAL
-		  MVC	LONGSAL,=H'20'
-		  BAL 	12,IMPRIMIR
+          CLI   ENTERA,X'60'
+          MVC   SIG_ENT,=X'0'
+          BNE   ENTE_
+          MVC   ENTERA,ENTERA+1
+          MVI   ENTERA+8,X'40'
+          MVC   SIG_ENT,=X'1'
 
-		  LA	4,ENTERA
-		  LA	5,ENTPACK		  
-		  BAL	12,LOADBIN
-		  LA	4,ENTERA+4
-		  BAL	12,LOADBIN		  
-		  MVC	LONGSAL,=H'12'
-		  MVC	SALIDA,ENTERA
-		  BAL	12,IMPRIMIR
+ENTE_     CLI   ENTERA+7,X'40'
+          BNE   ENT_POS
+          MVC   AUX_ENTE,ENTERA
+          MVC   ENTERA+1(8),AUX_ENTE
+          MVI   ENTERA,C'0'
+          B     ENTE_
 
-		  LA	4,EXPONETE
-		  LA	5,EXPPACK		  
-		  BAL	12,LOADBIN
-		  LA	4,EXPONETE+4
-		  BAL	12,LOADBIN
-		  MVC	LONGSAL,=H'12'
-		  MVC	SALIDA,EXPONETE
-		  BAL	12,IMPRIMIR
 
-	        
+ENT_POS   LA    4,ENTERA
+          LA    5,ENTBIN
+          BAL   12,LOADBIN
+          LA    4,ENTERA+4
+          BAL   12,LOADBIN
+
+          LA    4,DECIMAL
+          LA    10,16
+DEC_      CLI   0(4),X'40'
+          BNE   AUM_DEC
+          MVI   0(4),X'F0'
+AUM_DEC   LA    4,1(4)
+          BCT   10,DEC_
+
+          LA    4,DECIMAL
+          LA    5,DECBIN
+          BAL   12,LOADBIN
+          LA    4,DECIMAL+4
+          BAL   12,LOADBIN
+          LA    4,DECIMAL+8
+          BAL   12,LOADBIN
+          LA    4,DECIMAL+12
+          BAL   12,LOADBIN
+
+          CLI   EXPONETE,X'60'
+          MVC   SIG_EXP,=X'0'
+          BNE   EXP_
+          MVC   EXPONETE,EXPONETE+1
+          MVI   EXPONETE+8,X'40'
+          MVC   SIG_EXP,=X'1'
+
+EXP_      CLI   EXPONETE+7,X'40'
+          BNE   EXP_POS
+          MVC   AUX_ENTE,EXPONETE
+          MVC   EXPONETE+1(8),AUX_ENTE
+          MVI   EXPONETE,C'0'
+          B     EXP_
+
+EXP_POS   LA    4,EXPONETE
+          LA    5,EXPBIN
+          BAL   12,LOADBIN
+          LA    4,EXPONETE+4
+          BAL   12,LOADBIN
+
+          L     4,ENTBIN
+          L     5,DECBIN
+          L     6,EXPBIN
+          SLL   5,16
+
+          CLI   SIG_EXP,X'0'
+          BE    SHIFT
+          LA    8,0
+          SR    8,6
+          LR    6,8
+
+SHIFT     LA    8,127
+          AR    6,8
+          LA    8,0
+AUM_EXP   CL    4,=F'1'
+          BE    SUM_EXP
+          CL    4,=F'0'
+          BE    DIS_EXP
+          SRDL  4,1
+          LA    8,1(8)
+          B     AUM_EXP
+DIS_EXP   CL    4,=F'1'
+          BE    RES_EXP
+          SLDL  4,1
+          LA    8,1(8)
+          B     DIS_EXP
+SUM_EXP   AR    6,0
+          B     STR_BIN
+RES_EXP   SR    6,8
+STR_BIN   ST    4,ENTBIN
+          ST    5,DECBIN
+          ST    6,EXPBIN
+
+          L     5,DECBIN
+          L     4,EXPBIN
+          SRDL  4,8
+          LA    4,0
+          IC    4,SIG_ENT
+          SRDL  4,1
+          ST    5,FULLAUX
+*         B     ALMFULL
+          B     EXIT
+*********************************************
+*      CONVERTIR CIENTIFICO A BINARIO       *
+*********************************************
+
+LOADBIN   L     7,0(0,4)
+OTRO      LA    6,0
+          SLDL  6,8
+          C     6,=F'0'
+          BE    FINX
+          C     6,=F'240'
+          BL    ERROR
+          C     6,=F'249'
+          BH    ERROR
+          S     6,=F'240'
+          L     8,0(0,5)
+          SLL   8,1
+          AR    6,8
+          ST    6,0(0,5)
+          B     OTRO
+FINX      BR    12
+
+*********************************************
+ENTERA    DS    CL9
+WAITENT   DC    F'0'
+
+DECIMAL   DC    CL16'0000000000000000'
+WAITDEC   DC    F'0'
+
+EXPONETE  DS    CL9
+WAITEXP   DC    F'0'
+
+AUX_ENTE  DS    CL9
+AUX_DEC   DS    CL16
+SIG_ENT   DS    C
+SIG_EXP   DS    C
+DECBIN    DC    F'0'
+ENTBIN    DC    F'0'
+EXPBIN    DC    F'0'
+*********************************************
+
+
+
 EXIT      SUBEXIT
-*********************************************
-*			DEFINICION VARIABLES			*
-*********************************************	
-LONGSAL	  DC	H'20'
-          DC	H'0'
-SALIDA	  DC	CL16'00000000000000000000'
-
-ENTERA    DC   	CL8'00000000'
-WAITENT	  DC 	F'0'
-
-DECIMAL   DC  	CL16'0000000000000000'
-WAITDEC	  DC 	F'0'
-
-EXPONETE  DC   	CL8'00000000'
-WAITEXP	  DC 	F'0'
-
-DECPACK	  DC	D'0'
-ENTPACK	  DC	F'0'
-EXPPACK	  DC	F'0'
 
 *********************************************
-*			IMPRIMIR POR PATALLA			*
+*                    ERROR                  *
 *********************************************
-IMPRIMIR  WTO	MF=(E,SALIDA-4)
-          BR	12
+ERROR     MVC   SALIDA(24),=C'ERROR AL INGRESAR VALOR.'
+          MVC   LONGSAL,=H'28'
+          BAL   12,IMPRIMIR
+          B     EXIT
+
 *********************************************
-*	   CONVERTIR CIENTIFICO A BINARIO		*
+*           DEFINICION VARIABLES            *
 *********************************************
 
-* PARTE ENTERA DESIGNA EL SIGNO.
-* ENT		00000111
-* DEC		1010000000000000
-* EXP		00011001
-CONVABIN  PACK	0(8,5),0(8,4)
-		  CVB	4,0(0,5)
-		  LA	6,0
-		  ST	6,0(0,5)
-		  ST	4,4(0,5)
-		  BR	12
+DOBLE     DS    D
+SIGNO     DC    X'0'
+FULLAUX   DC    F'0'
+LONGSAL   DC    H'20'
+          DC    H'0'
+SALIDA    DC    CL16'00000000000000000000'
 
 
-LOADBIN	  L		7,0(0,4)
-OTRO	  LA	6,0
-		  SLDL	6,8
-		  C		6,=F'0'
-		  BE	FINX
-		  C		6,=F'240'
-		  BL	ERROR
-		  C		6,=F'249'
-		  BH	ERROR
-		  S		6,=F'240'
-		  L		8,0(0,5)
-		  SLL	8,1
-		  AR	6,8
-		  ST	6,0(0,5)
-		  B		OTRO
-FINX	  BR	12
 
+*********************************************
+*           IMPRIMIR POR PATALLA            *
+*********************************************
+IMPRIMIR  WTO   MF=(E,SALIDA-4)
+          BR    12
 
           END
