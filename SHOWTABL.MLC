@@ -1,0 +1,211 @@
+SHOWTABL  SUBENTRY  BASES=(3)
+*********************************************
+*                  SHOWTABL                  *
+*********************************************
+          MVC   SALIDA(10),=C'CIENTIFICO'
+*SHOWTABL  MVC   SALIDA(10),=C'CIENTIFICO'
+          MVC   LONGSAL,=H'14'
+          BAL   12,IMPRIMIR
+          L     10,LONGTABL
+          LA    11,CERO_TEN
+
+IMP_BIN   L     5,40(11)
+          MVC   SALIDA(4),0(11)
+          BAL   12,PR_CBIN
+          MVC   SALIDA+4(28),OUT
+          MVC   LONGSAL,=H'34'
+          BAL   12,IMPRIMIR
+          LA    11,4(11)
+          BCT   10,IMP_BIN
+
+          MVC   SALIDA(17),=C'IEEE754 CONF HEXA'
+          MVC   LONGSAL,=H'21'
+          BAL   12,IMPRIMIR
+          L     10,LONGTABL
+          LA    11,CERO_TEN
+
+IEEEHEXA  L     5,40(11)
+          MVC   SALIDA(4),0(11)
+          BAL   12,PR_IHEXA
+          MVC   LONGSAL,=H'16'
+          MVC   SALIDA+4(8),OUT
+          BAL   12,IMPRIMIR
+          LA    11,4(11)
+          BCT   10,IEEEHEXA
+
+          MVC   SALIDA(17),=C'IEEE754 CONF BINA'
+          MVC   LONGSAL,=H'21'
+          BAL   12,IMPRIMIR
+          L     10,LONGTABL
+          LA    11,CERO_TEN
+
+IEEEBIN   L     5,40(11)
+          MVC   SALIDA(4),0(11)
+          BAL   12,PR_IBIN
+          MVC   LONGSAL,=H'40'
+          MVC   SALIDA+4(32),OUT
+          BAL   12,IMPRIMIR
+          LA    11,4(11)
+          BCT   10,IEEEBIN
+
+
+*          B        BLABLA
+*          LA    6,NUM_0
+*          BAL   12,SEL_NUM
+*          LA    6,NUM_1
+*          BAL  12,SEL_NUM
+
+
+          SUBEXIT
+CHARAUX   DS    C
+WAITORD   DC    F'0'
+NUM_0     DC    F'0'
+NUM_1     DC    F'0'
+CERO_TEN  DC    CL40'0.  1.  2.  3.  4.  5.  6.  7.  8.  9.  '
+TABNUM    DS    0FL10
+          DC    X'0DF40000'
+          DC    X'85C6D800'
+          DC    X'C458D800'
+          DC    X'4458D800'
+          DC    X'C17C0000'
+          DC    X'C0880000'
+LONGTABL  DC    F'6'
+SIGNO     DS    X
+
+*********************************************
+*                  SEL_NUM                  *
+*********************************************
+SEL_NUM   WTOR 'SELECCIONE NUMERO PARA OPERAR.',CHARAUX,,WAITORD
+          WAIT ECB=WAITORD
+
+          LA    7,TABNUM
+          LA    5,0
+          IC    5,CHARAUX
+          S     5,=F'240'
+          C     5,=F'0'
+          BL
+          C     5,LONGTABL
+          BH
+          LA    4,0
+          M     4,=F'4'
+          L     8,0(7,5)
+          ST    8,0(6)
+          BR    12
+
+*********************************************
+*                  PR_CBIN                  *
+*********************************************
+
+EXPO      DC    8C'0'
+ENTE      DC    2C'0'
+DECI      DC    16C'0'
+POS       DC    CL2'01'
+NEG       DC    CL2'-1'
+SIG_EXP   DC    C'S'
+OUT       DC    64C'0'
+* RUTINA EXTERNA PARA CONVERTIR BINARIO EN CARACTER PARA MOSTRARLO
+* POR PANTALLA.
+PR_CBIN   LA    6,240
+          LA    7,EXPO
+          LA    9,8
+          LA    4,0
+          SLDL  4,1
+          STC   4,SIGNO
+          LA    4,0
+          SLDL  4,8
+          LR    8,4
+          S     8,=F'127'
+          C     8,=F'0'
+          BL    NOR_EXP
+          LR    4,8
+          SRDL  4,8
+          MVI   SIG_EXP,C'S'
+          B     EXP
+
+NOR_EXP   MVI   SIG_EXP,C'N'
+          LA    4,0
+          SR    4,8
+          SRDL  4,8
+
+          B     EXP
+
+EXP       LA    4,0
+          SLDL  4,1
+          AR    4,6
+          STC   4,0(0,7)
+          LA    7,1(7)
+          BCT   9,EXP
+          CLC   SIG_EXP,=C'N'
+          BNE   EXP_POS
+          MVI   EXPO,C'-'
+
+EXP_POS   CLI   SIGNO,X'0'
+          BE    IMP_POS
+          MVC   ENTE(2),NEG
+          B     SIG_DEC
+IMP_POS   MVC   ENTE(2),POS
+
+SIG_DEC   LA    9,16
+          LA    7,DECI
+
+IMP_DEC   LA    4,0
+          SLDL  4,1
+          AR    4,6
+          STC   4,0(0,7)
+          LA    7,1(7)
+          BCT   9,IMP_DEC
+
+          MVC   OUT(2),ENTE
+          MVI   OUT+2,C','
+          MVC   OUT+3(16),DECI
+          MVI   OUT+17,C'e'
+          MVC   OUT+18(8),EXPO
+          BR    12
+
+*********************************************
+*                   PR_IBIN                 *
+*********************************************
+PR_IBIN   LA    6,240
+          LA    7,OUT
+          LA    9,32
+
+IEEE      LA    4,0
+          SLDL  4,1
+          AR    4,6
+          STC   4,0(0,7)
+          LA    7,1(7)
+          BCT   9,IEEE
+
+         BR 12
+
+*********************************************
+*                  PR_IHEXA                 *
+*********************************************
+PR_IHEXA  LA    9,8
+          LA    7,OUT
+OTRO      LA    4,0
+          SLDL  4,4
+          C     4,=F'9'
+          BH    LETRA
+          LA    6,240
+          B     CARCHAR
+LETRA     LA    6,183
+CARCHAR   AR    4,6
+          STC   4,0(0,7)
+          LA    7,1(7)
+          BCT   9,OTRO
+          BR    12
+
+
+
+
+LONGSAL   DC    H'260'
+          DC    H'0'
+SALIDA    DS    256C'0'
+
+*********************************************
+*           IMPRIMIR POR PATALLA            *
+*********************************************
+IMPRIMIR  WTO   MF=(E,SALIDA-4)
+          BR    12
+          END
