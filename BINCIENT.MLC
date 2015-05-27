@@ -1,0 +1,101 @@
+BINCIENT  SUBENTRY BASES=(3)
+          LA    10,8
+ACA       L     5,TABNUM(10)
+          BAL   12,BINCHAR
+          BAL   12,IMPRIMIR
+
+          BCT   10,ACA
+         SUBEXIT
+TABNUM    DS    0FL10
+          DC    X'C458D800'
+          DC    X'85C6D800'
+          DC    X'0DF40000'
+          DC    X'85C6D800'
+          DC    X'C458D800'
+          DC    X'4458D800'
+          DC    X'C17C0000'
+          DC    X'C0880000'
+
+LONGSAL   DC    H'132'
+          DC    H'0'
+SALIDA    DC    128C'0'
+*********************************************
+*           IMPRIMIR POR PATALLA            *
+*********************************************
+IMPRIMIR  WTO   MF=(E,SALIDA-4)
+          BR    12
+
+
+*********************************************
+*                  BINCHAR                  *
+*********************************************
+
+EXPO      DC    8C'0'
+ENTE      DC    2C'0'
+DECI      DC    16C'0'
+POS       DC    CL2'01'
+NEG       DC    CL2'-1'
+SIGNO     DS    X
+SIG_EXP   DC    C'S'
+* RUTINA EXTERNA PARA CONVERTIR BINARIO EN CARACTER PARA MOSTRARLO
+* POR PANTALLA.
+BINCHAR   LA    6,240
+          LA    7,EXPO
+          LA    9,8
+          LA    4,0
+          SLDL  4,1
+          STC   4,SIGNO
+          LA    4,0
+          SLDL  4,8
+          LR    8,4
+          S     8,=F'127'
+          C     8,=F'0'
+          BL    NOR_EXP
+          LR    4,8
+          SRDL  4,8
+          MVI   SIG_EXP,C'S'
+          B     EXP
+
+NOR_EXP   MVI   SIG_EXP,C'N'
+          LA    4,0
+          SR    4,8
+          SRDL  4,8
+          B     EXP
+
+EXP       LA    4,0
+          SLDL  4,1
+          AR    4,6
+          STC   4,0(0,7)
+          LA    7,1(7)
+          BCT   9,EXP
+
+          CLC   SIG_EXP,=C'N'
+          BNE   EXP_POS
+          MVI   EXPO,C'-'
+
+EXP_POS   CLI   SIGNO,X'0'
+          BE    IMP_POS
+          MVC   ENTE(2),NEG
+          B     SIG_DEC
+IMP_POS   MVC   ENTE(2),POS
+
+SIG_DEC   LA    9,16
+          LA    7,DECI
+
+IMP_DEC   LA    4,0
+          SLDL  4,1
+          AR    4,6
+          STC   4,0(0,7)
+          LA    7,1(7)
+          BCT   9,IMP_DEC
+
+          MVC   SALIDA(2),ENTE
+          MVI   SALIDA+2,C','
+          MVC   SALIDA+3(16),DECI
+          MVI   SALIDA+19,C'e'
+          MVC   SALIDA+20(8),EXPO
+          MVC   LONGSAL,=H'32'
+          BR    12
+
+
+          END
