@@ -1,54 +1,75 @@
 CONVHEX   SUBENTRY BASES=(3)
+*********************************************
+*       CONVERTIR CHAR HEXA EN BINARIO      *
+*********************************************
+*CONVHEX   WTOR  'INGRESE NUMERO EN FORMATO HEXA',HEXA,,WAITHEXA
+          LA    4,0
+          ST    4,FULLAUX
           WTOR  'INGRESE NUMERO EN FORMATO HEXA',HEXA,,WAITHEXA
-          WAIT	ECB=WAITHEXA
-		  L		7,HEXA
-		  BAL	12,XTOBIN
-		  L		7,HEXA+4
-		  BAL	12,XTOBIN
-		  L		4,CONHEXA
-		  MVC	SALIDA,HEXA
-		  BAL	12,IMPRIMIR
+          WAIT  ECB=WAITHEXA
+          L     7,HEXA
+          BAL   12,XTOBIN
+          L     7,HEXA+4
+          BAL   12,XTOBIN
+*         B     ALMFULL
+          B     EXIT
+*********************************************
+*           CONVERTIR A BINARIO             *
+*********************************************
+XTOBIN    LA    6,0
+          SLDL  6,8
+          C     6,=F'0'
+          BE    FINHEX
+          C     6,=F'193'
+          BL    ERROR
+          C     6,=F'199'
+          BL    CONVCHAR
+          C     6,=F'240'
+          BL    ERROR
+          C     6,=F'249'
+          BH    ERROR
+CONVDEC   S     6,=F'240'
+          B     SAVERES
+CONVCHAR  S     6,=F'193'
+          A     6,=F'10'
+SAVERES   L     4,FULLAUX
+          SLL   4,4
+          AR    6,4
+          ST    6,FULLAUX
+          B     XTOBIN
+
+FINHEX    BR    12
+
+HEXA      DC    CL8'00000000'
+WAITHEXA  DC    F'0'
+
 *IEEE 754 C546D800
 
 EXIT      SUBEXIT
-*********************************************
-*			DEFINICION VARIABLES			*
-*********************************************		        
-		  DC	H'12'
-          DC	H'0'
-SALIDA	  DC	CL8'00000000'
-HEXA	  DC   	CL8'00000000'
-WAITHEXA  DC 	F'0'
-CONHEXA	  DC	F'0'
-SUBHEXA	  DC	F'10'
 
 *********************************************
-*			IMPRIMIR POR PATALLA			*
+*                    ERROR                  *
 *********************************************
-IMPRIMIR  WTO	MF=(E,SALIDA-4)
-          BR	12
+ERROR     MVC   SALIDA(24),=C'ERROR AL INGRESAR VALOR.'
+          MVC   LONGSAL,=H'28'
+          BAL   12,IMPRIMIR
+          B     EXIT
+
 *********************************************
-*			CONVERTIR A BINARIO				*
+*           DEFINICION VARIABLES            *
 *********************************************
-XTOBIN    LA 	6,0
-		  SLDL	6,8
-		  C		6,=F'193'
-		  BL	FINX
-		  C		6,=F'199'
-		  BL	CONVCHAR
-		  C		6,=F'240'
-		  BL	ERROR
-		  C		6,=F'249'
-		  BH	ERROR
-CONVDEC	  S		6,=F'240'
-		  B		SAVERES
-CONVCHAR  S		6,=F'193'
-		  A		6,=F'10'
-SAVERES   L		4,CONHEXA
-		  SLL	4,4
-		  AR	6,4
-		  ST	6,CONHEXA
-		  B		XTOBIN
-FINX	  BR	12
+LONGSAL   DC    H'260'
+          DC    H'0'
+SALIDA    DS    256C'0'
+FULLAUX   DS    F
+*********************************************
+
+SIGNO     DC    X'0'
+
+*********************************************
+*           IMPRIMIR POR PATALLA            *
+*********************************************
+IMPRIMIR  WTO   MF=(E,SALIDA-4)
+          BR    12
 
           END
