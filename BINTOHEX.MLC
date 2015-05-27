@@ -1,0 +1,43 @@
+BINTOHEX  SUBENTRY BASES=(3)
+          L     5,BINA_0
+          BAL   12,HEX_CHAR
+          BAL   12,IMPRIMIR
+          L     5,BINA_1
+          BAL   12,HEX_CHAR
+          BAL   12,IMPRIMIR
+          SUBEXIT
+*********************************************
+*                  HEX_CHAR                 *
+*********************************************
+CHAR_0    DC    CL8'0'
+
+HEX_CHAR  LA    9,8
+          LA    7,CHAR_0
+OTRO      LA    4,0
+          SLDL  4,4
+          C     4,=F'9'
+          BH    LETRA
+          LA    6,240
+          B     CARCHAR
+LETRA     LA    6,183
+CARCHAR   AR    4,6
+          STC   4,0(0,7)
+          LA    7,1(7)
+          BCT   9,OTRO
+
+
+          MVC   SALIDA,CHAR_0
+          MVC   LONGSAL,=H'12'
+          BR    12
+
+BINA_0    DC    X'0DF40000'
+BINA_1    DC    X'85C6D800'
+
+LONGSAL   DC    H'20'
+          DC    H'0'
+SALIDA    DC    CL16'00000000000000000000'
+
+IMPRIMIR  WTO   MF=(E,SALIDA-4)
+          BR    12
+
+          END
