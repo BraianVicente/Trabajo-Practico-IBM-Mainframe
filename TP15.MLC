@@ -1,15 +1,5 @@
 TP15_2    SUBENTRY BASES=(2,3)
-OTRONUM   L     4,DEZPL
-          C     4,FULL_40
-          BNL   OPERAR
-          WTOR  'DESEA INGRESAR OTRO NUMERO?',CHARAUX,,WAITORD
-          WAIT  ECB=WAITORD
-          CLC   CHARAUX,CHAR_S
-          BNE   OPERAR
-*CADE_00   DC    C'ELIJA FORMATO DE ENTRADA'
-*CADE_01   DC    C'H PARA IEE754 CONFIGURACION HEXA'
-*CADE_02   DC    C'B PARA CIENTIFICO CONFIGURACION BINARIA'
-          MVC   LONGSAL,HALF_28
+OTRONUM   MVC   LONGSAL,HALF_28
           MVC   SALIDA(28),CADE_00
           BAL   12,IMPRIMIR
           MVC   LONGSAL,HALF_36
@@ -18,6 +8,9 @@ OTRONUM   L     4,DEZPL
           MVC   LONGSAL,HALF_43
           MVC   SALIDA(43),CADE_02
           BAL   12,IMPRIMIR
+*CADE_00   DC    C'ELIJA FORMATO DE ENTRADA'
+*CADE_01   DC    C'H PARA IEE754 CONFIGURACION HEXA'
+*CADE_02   DC    C'B PARA CIENTIFICO CONFIGURACION BINARIA'
 SELECTF   WTOR  'SELECCIONE FORMATO?',CHARAUX,,WAITORD
           WAIT  ECB=WAITORD
           CLC   CHARAUX,CHAR_H
@@ -25,7 +18,11 @@ SELECTF   WTOR  'SELECCIONE FORMATO?',CHARAUX,,WAITORD
           CLC   CHARAUX,CHAR_B
           BE    CONVBIN
           BNE   SELECTF
-CONT      B     OTRONUM
+CONT      WTOR  'DESEA INGRESAR OTRO NUMERO?',CHARAUX,,WAITORD
+          WAIT  ECB=WAITORD
+          CLC   CHARAUX,CHAR_S
+          BNE   OPERAR
+          B     OTRONUM
 EXIT      SUBEXIT
 *********************************************
 *           DEFINICION VARIABLES            *
@@ -102,7 +99,7 @@ CADE_12   DC    C'HUBO ABSORCION DEL RESULTADO'
 CADE_13   DC    C'EL RESULTADO DE LA OPERACION ES: '
 *********************************************
 CERO_TEN  DC    CL40'0.  1.  2.  3.  4.  5.  6.  7.  8.  9.  '
-TABNUM    DS    10XL4
+TABNUM    DS    40X
 LONGTABL  DC    F'0'
 FULLAUX   DS    F
 DIREAUX   DS    F
@@ -116,7 +113,17 @@ WAITHEXA  DC    F'0'
 *********************************************
 *        ALMACENAR EN TABLA NUMEROS         *
 *********************************************
+FULLMEM   MVC   LONGSAL,=H'38'
+          MVC   SALIDA(34),=C'MEMORIA LLEGA, NO SE PUEDE GUARDAR'
+          BAL   12,IMPRIMIR
+          B     OPERAR
+*********************************************
+*        ALMACENAR EN TABLA NUMEROS         *
+*********************************************
 ALMFULL   L     4,DEZPL
+          C     4,FULL_40
+          BNL   FULLMEM
+          L     4,DEZPL
           LA    5,TABNUM
           AR    5,4
           MVC   0(4,5),FULLAUX
@@ -150,8 +157,15 @@ OPERAR    MVC   LONGSAL,HALF_29
           MVC   LONGSAL,HALF_30
           MVC   SALIDA(26),CADE_07
           BAL   12,IMPRIMIR
+          MVC   LONGSAL,=H'33'
+          MVC   SALIDA(29),=C'I - PARA INGRESAR OTRO NUMERO'
+          BAL   12,IMPRIMIR
           WTOR  'SELECCIONE OPERACION A REALIZAR',CHARAUX,,WAITORD
           WAIT  ECB=WAITORD
+          CLI   CHARAUX,C'I'
+          BE    OTRONUM
+          CLI   CHARAUX,C'F'
+          BE    EXIT
           B     SHOWTABL
 FIN_SHOW  CLI   CHARAUX,C'S'
           BE    SEL_SURE
@@ -159,8 +173,6 @@ FIN_SHOW  CLI   CHARAUX,C'S'
           BE    SEL_SURE
           CLI   CHARAUX,C'H'
           BE    OVUNDER
-          CLI   CHARAUX,C'F'
-          BE    EXIT
           B     OPERAR
 *********************************************
 *                    ERROR                  *
@@ -231,7 +243,9 @@ IEEEBIN   L     5,40(11)
 *********************************************
 CHAROPER  DS    C
 RES_OPE   DS    C
-SEL_SURE  LA    6,NUM_0
+*********************************************
+SEL_SURE  MVC   CHAROPER(1),CHARAUX
+          LA    6,NUM_0
           BAL   12,SEL_NUM
           LA    6,NUM_1
           BAL   12,SEL_NUM
@@ -266,7 +280,7 @@ MNT_0     DS    F
 MNT_1     DS    F
 MNT_2     DS    F
 *********************************************
-SUMRES    MVC   RES_OPE,CHAR_C
+SUMRES    MVI   RES_OPE,C'C'
           LA    4,0
           L     5,NUM_0
           LA    6,0
@@ -280,6 +294,7 @@ SUMRES    MVC   RES_OPE,CHAR_C
           LA    4,1
           SLDL  4,22
           ST    4,MNT_0
+
           L     4,EXP_0
           L     5,MNT_0
           SLL   5,9
@@ -287,6 +302,7 @@ SUMRES    MVC   RES_OPE,CHAR_C
           L     4,SIG_0
           SRDL  4,1
           ST    5,NUM_0
+
           SLDL  6,1
           ST    6,SIG_1
           LA    6,0
@@ -296,6 +312,7 @@ SUMRES    MVC   RES_OPE,CHAR_C
           LA    6,1
           SLDL  6,22
           ST    6,MNT_1
+
           L     6,EXP_1
           L     7,MNT_1
           SLL   7,9
@@ -303,10 +320,12 @@ SUMRES    MVC   RES_OPE,CHAR_C
           L     6,SIG_1
           SRDL  6,1
           ST    7,NUM_1
+
           LA    4,0
           L     5,NUM_0
           LA    6,0
           L     7,NUM_1
+
           SLDL  4,1
           ST    4,SIG_0
           LA    4,0
@@ -315,6 +334,7 @@ SUMRES    MVC   RES_OPE,CHAR_C
           LA    4,0
           SLDL  4,23
           ST    4,MNT_0
+
           SLDL  6,1
           ST    6,SIG_1
           LA    6,0
@@ -323,23 +343,26 @@ SUMRES    MVC   RES_OPE,CHAR_C
           LA    6,0
           SLDL  6,23
           ST    6,MNT_1
+
           L     4,EXP_0
           L     6,EXP_1
           CR    4,6
           BH    EQU_SEC
           BL    EQU_FIR
+* VERIFICO QUE LOS SIGNOS SEAN IGUALES
+* SI SON IGUALES, SE REALIZAN LAS OPERACIONES TAL CUAL ESTA.
 CMP_SIG   CLC   SIG_0,SIG_1
           BE    MISM_SIG
-          CLC   SIG_0,FULL_1
+          CLC   SIG_0,=F'1'
           BE    FIR_NEG
-          CLC   SIG_1,FULL_1
+          CLC   SIG_1,=F'1'
           BE    SEC_NEG
+
 MISM_SIG  L     4,SIG_0
           L     5,MNT_0
           L     6,EXP_0
           L     7,MNT_1
-
-          CLC   CHAROPER,CHAR_S
+          CLI   CHAROPER,C'S'
           BE    SUM_MSM
           CR    5,7
           BL    CMB_SIG
@@ -347,17 +370,20 @@ MISM_SIG  L     4,SIG_0
           B     STR_RES
 CMB_SIG   SR    7,5
           LR    5,7
-          CLC   4,HEX_0
+          CLI   4,X'0'
           BE    CMBTONEG
           LA    4,0
           B     STR_RES
 SUM_MSM   AR    5,7
           B     STR_RES
+
 CMBTONEG  LA    4,1
           B     STR_RES
+
+
 EQU_SEC   L     7,MNT_1
           SR    4,6
-          C     4,FULL_23
+          C     4,=F'24'
           BH    ABS_FIR
 SHIF_1    SRL   7,1
           LA    6,1(6)
@@ -365,18 +391,19 @@ SHIF_1    SRL   7,1
           ST    6,EXP_1
           ST    7,MNT_1
           B     CMP_SIG
+
 ABS_FIR   L     4,SIG_0
           L     5,MNT_0
           L     6,EXP_0
           ST    4,SIG_2
           ST    5,MNT_2
           ST    6,EXP_2
-
-          MVC   RES_OPE,CHAR_A
+          MVI   RES_OPE,C'A'
           B     STR_RES
+
 EQU_FIR   L     5,MNT_0
           SR    6,4
-          C     6,FULL_23
+          C     6,=F'23'
           BH    ABS_SEC
 SHIF_0    SRL   5,1
           LA    4,1(4)
@@ -384,25 +411,30 @@ SHIF_0    SRL   5,1
           ST    4,EXP_0
           ST    5,MNT_0
           B     CMP_SIG
+
 ABS_SEC   L     4,SIG_1
           L     5,MNT_1
           L     6,EXP_1
           ST    4,SIG_2
           ST    5,MNT_2
           ST    6,EXP_2
-          MVC   RES_OPE,CHAR_A
+          MVI   RES_OPE,C'A'
           B     STR_RES
+
 FIR_NEG   LA    4,1
           L     6,EXP_0
           L     5,MNT_0
           L     7,MNT_1
-          CLC   CHAROPER,CHAR_S
+          CLI   CHAROPER,C'S'
           BE    ADD1TO2
+* SIGNO SIEMPRE NEGATIVO
+* SI A ALGO NEGATIVO LE "RESTO" EL RESULTADO DA NEGATIVO.
           AR    5,7
           LA    4,1
           B     STR_RES
+
 ADD1TO2   SR    5,7
-          C     5,FULL_0
+          C     5,=F'0'
           BE    CERO
           BH    STR_RES
           LA    4,0
@@ -410,16 +442,18 @@ ADD1TO2   SR    5,7
           LA    5,0
           SR    5,7
           B     STR_RES
+
 SEC_NEG   LA    4,0
           L     6,EXP_0
           L     5,MNT_0
           L     7,MNT_1
-          CLC   CHAROPER,CHAR_S
+          CLI   CHAROPER,C'S'
           BE    ADD2TO1
           AR    5,7
 SUM_POS   B     STR_RES
+
 ADD2TO1   SR    5,7
-          C     5,HALF_0
+          C     5,=F'0'
           BE    CERO
           BH    STR_RES
           LA    4,1
@@ -427,6 +461,7 @@ ADD2TO1   SR    5,7
           LA    5,0
           SR    7,5
           B     STR_RES
+
 CERO      LA    5,0
           LA    4,0
           LA    6,0
@@ -435,33 +470,43 @@ CERO      LA    5,0
           ST    5,MNT_2
           ST    5,NUM_2
           BR    12
+
 STR_RES   ST    4,SIG_2
           ST    6,EXP_2
           ST    5,MNT_2
+* AHORA TENDRIA QUE VERIFICAR SI EXISTE OVERFLOW EN EL RESULTADO
+* O SI EXISTE UNDERFLOR.
           LA    4,0
           LA    7,0
           LA    8,16
           L     5,MNT_2
           L     6,EXP_2
           SLDL  4,9
-          CL    4,FULL_1
+          CL    4,=F'1'
           BE    SUM_EXP
+
 OTR_EXP   SLDL  4,1
-          CL    4,FULL_1
+          CL    4,=F'1'
           BE    RES_EXP
           LA    7,1(7)
           BCT   8,OTR_EXP
+* SI TERMINA EL BCT ENTONCES ES PORQUE HAY OVERFLOW.
           B     UNDRFLOW
+
 RES_EXP   SR    6,7
-          CL    6,FULL_1
+          CL    6,=F'1'
           BL    UNDRFLOW
           B     STR_2
+
 SUM_EXP   AR    6,4
-          CL    6,FULL_245
+          CL    6,=F'254'
           BH    OVERFLOW
+
 STR_2     SRDL  4,10
           ST    5,MNT_2
           ST    6,EXP_2
+
+
           L     5,MNT_2
           SLL   5,10
           L     4,EXP_2
@@ -471,7 +516,9 @@ STR_2     SRDL  4,10
           L     4,SIG_2
           SRDL  4,1
           ST    5,NUM_2
+
           BR    12
+
 *********************************************
 *                 OVERFLOW                  *
 *********************************************
@@ -535,8 +582,8 @@ CONVBIN   WTOR  'INGRESE PARTE ENTERA',ENTERA,,WAITENT
           MVC   SIG_ENT,HEX_0
           CLC   ENTERA(1),SIGNO_M
           BNE   ENTE_
-          MVC   ENTERA,ENTERA+1
-          MVC   ENTERA+8,ESPACIO
+          MVC   ENTERA(8),ENTERA+1
+          MVC   ENTERA+8(1),ESPACIO
           MVC   SIG_ENT,HEX_1
 
 ENTE_     CLC   ENTERA+7(1),ESPACIO
