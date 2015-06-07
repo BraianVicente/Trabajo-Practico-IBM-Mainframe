@@ -1,4 +1,4 @@
-TP15_2    SUBENTRY BASES=(2,3)
+TP15      SUBENTRY BASES=(2,3)
 OTRONUM   MVC   LONGSAL,HALF_28
           MVC   SALIDA(28),CADE_00
           BAL   12,IMPRIMIR
@@ -17,7 +17,7 @@ SELECTF   WTOR  'SELECCIONE FORMATO?',CHARAUX,,WAITORD
           BE    CONVHEX
           CLC   CHARAUX,CHAR_B
           BE    CONVBIN
-          BNE   SELECTF
+          BNE   OTRONUM
 CONT      WTOR  'DESEA INGRESAR OTRO NUMERO?',CHARAUX,,WAITORD
           WAIT  ECB=WAITORD
           CLC   CHARAUX,CHAR_S
@@ -114,7 +114,7 @@ WAITHEXA  DC    F'0'
 *        ALMACENAR EN TABLA NUMEROS         *
 *********************************************
 FULLMEM   MVC   LONGSAL,=H'38'
-          MVC   SALIDA(34),=C'MEMORIA LLEGA, NO SE PUEDE GUARDAR'
+          MVC   SALIDA(34),=C'MEMORIA LLENA, NO SE PUEDE GUARDAR'
           BAL   12,IMPRIMIR
           B     OPERAR
 *********************************************
@@ -491,31 +491,40 @@ OTR_EXP   SLDL  4,1
           LA    7,1(7)
           BCT   8,OTR_EXP
 * SI TERMINA EL BCT ENTONCES ES PORQUE HAY OVERFLOW.
-          B     UNDRFLOW
+          MVI   RES_OPE,C'O'
+          B     STR_2
 
 RES_EXP   SR    6,7
           CL    6,=F'1'
-          BL    UNDRFLOW
-          B     STR_2
+          BNL   STR_2
+          MVI   RES_OPE,C'U'
+          BL    STR_2
 
 SUM_EXP   AR    6,4
           CL    6,=F'254'
-          BH    OVERFLOW
+          BNH   STR_2
+          MVI   RES_OPE,C'O'
+          BH    STR_2
 
 STR_2     SRDL  4,10
           ST    5,MNT_2
           ST    6,EXP_2
 
-
           L     5,MNT_2
           SLL   5,10
           L     4,EXP_2
-          LA    7,1
+          LA    7,1A
           SR    4,7
           SRDL  4,8
           L     4,SIG_2
           SRDL  4,1
           ST    5,NUM_2
+
+          CLI   RES_OPE,C'O'
+          BE    OVERFLOW
+          CLI   RES_OPE,C'U'
+          BE    UNDRFLOW
+
 
           BR    12
 
@@ -536,7 +545,7 @@ UNDRFLOW  MVC   RES_OPE,CHAR_U
 *********************************************
 *                  SEL_NUM                  *
 *********************************************
-SEL_NUM   WTOR  'SELECCIONE NUMERO PARA OPERAR.',CHARAUX,,WAITORD
+SEL_NUM   WTOR  'SELECCIONE NUMERO PARA OPERAR ',CHARAUX,,WAITORD
           WAIT  ECB=WAITORD
           LA    7,TABNUM
           LA    5,0
@@ -823,30 +832,30 @@ CARCHAR   AR    4,6
           BCT   9,NEXT_PR
           BR    12
 *********************************************
-*********************************************
 *                OVERUNDER                  *
 *********************************************
 OVERPOS   DC    C'R'
           DC    X'7F7FFFFF'
 OV_POS    DC    4X'0'
-          DC    C'SUMAR PARA OVERFLOW POSITIVO   ' *31
+          DC    C'SUMAR PARA OVERFLOW POSITIVO            ' *40
           DC    C'NO EXISTE NUMERO QUE SUMADO DE OVERFLOW POSITIVO '
 UNDERPOS  DC    C'S'
           DC    X'00800000'
 UN_POS    DC    4X'0'
-          DC    C'RESTAR PARA UNDERFLOW POSITIVO '
+          DC    C'RESTAR PARA UNDERFLOW POSITIVO          '
           DC    C'NO EXISTE NUMERO QUE SUMADO DE OVERFLOW NEGATIVO '
 OVERNEG   DC    C'R'
           DC    X'80800000'
 OV_NEG    DC    4X'0'
-          DC    C'SUMAR PARA OVERFLOW POSITIVO   ' *31
+          DC    C'SUMAR PARA OVERFLOW NEGATIVO            ' *31
           DC    C'NO EXISTE NUMERO QUE SUMADO DE UNDERFLOW POSITIVO'
 UNDERNEG  DC    C'S'
           DC    X'FF7FFFFF'
 UN_NEG    DC    4X'0'
-          DC    C'SUMAR PARA OVERFLOW POSITIVO   ' *31
+          DC    C'RESTAR PARA UNDERFLOW NEGATIVO          ' *31
           DC    C'NO EXISTE NUMERO QUE SUMADO DE UNDERFLOW NEGATIVO'
 OVEUNAUX  DC    4X'0'
+*********************************************
 OVUNDER   LA    6,NUM_1
           BAL   12,SEL_NUM
           LA    11,OVERPOS
@@ -862,14 +871,14 @@ OTR_OVUN  MVC   NUM_1,OVEUNAUX
           BE    AB_OVUN
           L     5,NUM_2
           BAL   12,PR_IHEXA
-          MVC   SALIDA(31),9(11)
+          MVC   SALIDA(40),9(11)
           MVC   SALIDA+31(8),OUT
           MVC   LONGSAL,HALF_44
           B     PRI_OVUN
-AB_OVUN   MVC   SALIDA(49),40(11)
+AB_OVUN   MVC   SALIDA(58),49(11)
           MVC   LONGSAL,HALF_53
 PRI_OVUN  BAL   12,IMPRIMIR
-          LA    11,89(11)
+          LA    11,98(11)
           BCT   10,OTR_OVUN
           B     OPERAR
           END
